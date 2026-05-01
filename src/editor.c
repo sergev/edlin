@@ -18,7 +18,6 @@ void editor_init(Editor *ed)
     memset(ed, 0, sizeof *ed);
     ed->current = 1;
     ed->disp_rows = 25;
-    ed->disp_cols = 80;
 }
 
 void editor_free(Editor *ed)

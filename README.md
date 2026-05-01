@@ -20,7 +20,6 @@ Optional merge integration (`tests/test_edlin_commands.py`): set `EDLIN_TEST_MER
 Environment:
 
 - `EDLIN_ROWS` — logical screen length for **L** / **P** (default `25`).
-- `EDLIN_COLS` — reserved for future wrapping (default `80`).
 
 ### C port notes
 

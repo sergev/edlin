@@ -34,7 +34,6 @@ Implementation: [`parse_invocation`](src/parser.c), [`fileio_startup`](src/filei
 **Environment variables:**
 
 - **`EDLIN_ROWS`**: Positive integer; sets the logical screen height used by **`L`** and **`P`** (default **25**). See [`main.c`](src/main.c).
-- **`EDLIN_COLS`**: Reserved for future use (default **80**).
 
 If the file does not exist, the editor prints **New file** and starts an empty buffer.
 

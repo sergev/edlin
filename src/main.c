@@ -71,7 +71,6 @@ int main(int argc, char **argv)
     Editor ed;
     editor_init(&ed);
     ed.disp_rows = env_u("EDLIN_ROWS", 25);
-    ed.disp_cols = env_u("EDLIN_COLS", 80);
 
     if (fileio_startup(&ed, path, binary) != 0) {
         editor_free(&ed);
