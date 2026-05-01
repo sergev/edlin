@@ -1,4 +1,7 @@
 edlin
+tmp_edlin_*
+__pycache__/
 test_parser
 *.o
 *.dSYM
+__pycache__

@@ -10,8 +10,11 @@ Build and run on macOS/Linux (needs a C compiler):
 make
 ./edlin myfile.txt
 ./edlin /B binary.bin    # optional: binary mode (no Ctrl-Z cut on load)
-make test                  # parser unit test
+make test                  # parser unit test + Python integration tests (`pexpect`)
+pip install -r requirements-dev.txt   # once: integration suite needs `pexpect`
 ./tests/smoke.sh           # minimal stdin script (build `edlin` first)
+
+Optional merge integration (`tests/test_edlin_commands.py`): set `EDLIN_TEST_MERGE_IO=1` if `fopen` on merge paths should be exercised (some sandboxed environments block this).
 ```
 
 Environment:
