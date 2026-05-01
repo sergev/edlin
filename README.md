@@ -1,26 +1,28 @@
-<img width="150" height="150" align="left" style="float: left; margin: 0 10px 0 0;" alt="MS-DOS logo" src="https://github.com/Microsoft/MS-DOS/blob/main/.readmes/msdos-logo.png">   
+# EDLIN — MS-DOS line editor source
 
-# MS-DOS v1.25, v2.0, v4.0 Source Code
+**EDLIN** is the classic line-oriented text editor shipped with MS-DOS: a prompt (`*`), line numbers, and single-letter commands (**L**ist, **I**nsert, **D**elete, **W**rite, etc.). This repository holds **only** the EDLIN utility sources extracted from the published MS-DOS corpus—8086 assembly for **DOS 4.00**–era behavior (system parser, message retriever, optional **`/B`** binary load, DBCS-related hooks in the headers).
 
-This repo contains the original source-code and compiled binaries for MS-DOS v1.25 and MS-DOS v2.0, plus the source-code for MS-DOS v4.00 jointly developed by IBM and
-Microsoft.
+## Contents
 
-The MS-DOS v1.25 and v2.0 files [were originally shared at the Computer History Museum on March 25th, 2014]( http://www.computerhistory.org/atchm/microsoft-ms-dos-early-source-code/) and are being (re)published in this repo to make them easier to find, reference-to in external writing and works, and to allow exploration and experimentation for those interested in early PC Operating Systems.  
+| Path | Purpose |
+|------|---------|
+| `edlin.asm` | Entry point, command loop, line-argument parsing (`GETNUM`), dispatch table, move/copy |
+| `edlcmd1.asm`, `edlcmd2.asm` | Command implementation and helpers (append, delete, list, page, write, …) |
+| `edlparse.asm` | External command line: required filespec, optional `/B` |
+| `edlmes.asm` | Message retriever / printf bridge |
+| `edlequ.asm`, `edlstdsw.inc` | Equates and build switches |
+| `edlin.skl` | Message skeleton for building localized message tables |
+| `makefile`, `edlin.lnk` | Link order: `EDLIN+EDLCMD1+EDLCMD2+EDLMES+EDLPARSE` → `edlin.com` |
+| `AGENT.md` | Structured summary for tools and contributors (commands, buffers, build caveats) |
 
-# License
+## Building
 
-All files within this repo are released under the [MIT License]( https://en.wikipedia.org/wiki/MIT_License) as per the [LICENSE file](https://github.com/Microsoft/MS-DOS/blob/main/LICENSE) stored in the root of this repo.
+The `makefile` expects a **full DOS build tree**: parent directories for `inc` (e.g. `dossym.inc`, `parse.asm`), `messages`, and tools (assembler, linker, `convert` to produce `.COM`, message build for `edlin.ctl`). **This checkout is not self-contained**; treat the sources as the authoritative reference until those dependencies are wired up.
 
-# For historical reference
+## License
 
-The source files in this repo are for historical reference and will be kept static, so please **don’t send** Pull Requests suggesting any modifications to the source files, but feel free to fork this repo and experiment 😊.  
+See [`LICENSE`](LICENSE) — MIT License, copyright IBM and Microsoft Corporation.
 
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).  For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+## History
 
-# Trademarks
-
-This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft
-trademarks or logos is subject to and must follow
-[Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/legal/intellectualproperty/trademarks/usage/general).
-Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship.
-Any use of third-party trademarks or logos are subject to those third-party's policies.
+These files come from the same MS-DOS source releases [published by Microsoft](https://github.com/microsoft/MS-DOS) (early DOS versions were also [archived at the Computer History Museum](http://www.computerhistory.org/atchm/microsoft-ms-dos-early-source-code/)). They are preserved here for study, porting, and accurate documentation of **EDLIN** behavior—not as a drop-in build of the entire operating system.
