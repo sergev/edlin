@@ -27,6 +27,7 @@ Environment:
 - Uses **only** the C standard library (`stdio`, `stdlib`, `string`, `ctype`, `errno`).
 - Command letters and numeric arguments follow the original **`COMTAB`** / **`GETNUM`** behavior (see [`AGENT.md`](AGENT.md)); details differ where DOS calls cannot be reproduced (PSP, IOCTL screen probe, SYSMSG, INT 23h, extended attributes).
 - **Search / Replace**: patterns use `old;text` after **`R`** / **`S`** (semicolon separator); `^V` quoting is accepted as `0x16` in input lines.
+- Comma-separated command forms, **`?`** placement, and default-range edge cases for **`S`** / **`R`** (and related parse traps) are documented in [`Manual.md`](Manual.md) § **Parsing pitfalls (comma-separated forms)**.
 - **Save**: writes a scratch file (`filename.$$$`), then renames like the DOS utility (original → `.bak`, scratch → original).
 - Historical **`makefile.dos`** builds the original `.com`; the root **`Makefile`** builds the C binary only.
 

@@ -68,6 +68,8 @@ If **parameter 2** is not zero, it must be **greater than or equal to parameter 
 
 If **`?`** appears **after** the numeric parameters and **before** the command letter, **`query`** is set. In this implementation it affects **`S`** (search) and **`R`** (replace): after a match, the editor asks **O.K.?** and accepts **`y`** / **`n`** (see [`cmd_search`](src/commands.c), [`cmd_replace`](src/commands.c)). A bare **Enter** on the yes/no prompt is treated as **yes**.
 
+Example: **`1?Sfoo`**. Do **not** use **`?Sfoo`** at the start of the line — with no parameter list before **`?`**, it is not parsed as the query flag and you usually get **Entry error** (see [Parsing pitfalls (comma-separated forms)](#parsing-pitfalls-comma-separated-forms)).
+
 ### Command letter
 
 Letters are **case-insensitive**. Valid commands are the letters in **`COMTAB`** / [`dispatch_index`](src/parser.c): **`A C D E I L M P Q R S T W`**, plus two special forms:
@@ -80,6 +82,31 @@ Invalid or unknown letters produce **Entry error**.
 ### Multiple commands on one input line
 
 After a command runs, the remainder of the line is parsed again. The outer loop stops when the next non-whitespace character is neither **`;`** nor **`Ctrl+Z`** ([`run_input_line`](src/main.c)); otherwise that delimiter is consumed and the next command is parsed.
+
+---
+
+## Parsing pitfalls (comma-separated forms)
+
+These behaviors come straight from [`parse_command`](src/parser.c); they show up often in scripts and in the Python integration tests ([`tests/test_edlin_commands.py`](tests/test_edlin_commands.py)).
+
+### **`C` / `M` and commas**
+
+The parser collects **comma-separated** numeric tokens, then the **command letter**. A digit run **after** the letter is **not** a fourth line number; it is **rest-of-line** for that command (e.g. path for **`T`**, or invalid noise for **`C`**).
+
+- **Wrong:** **`1,2C4`** — only two line numbers are read (**`1`**, **`2`**), then command **`C`**. The **`4`** is not **`param3`**. This does **not** mean “copy lines 1–2 before line 4” and usually yields **Entry error** (wrong parameter count for **`C`**).
+- **Right:** **`1,2,4C`** — three line numbers, then **`C`** (copy that block before line **4**).
+
+Similarly, **`1,2C0`** is **not** “destination 0”. To have a **third numeric slot** that reads as zero with **`C`** immediately after the third comma, use a form like **`1,2,C`**, which can yield **Must specify destination line number** when **`param3`** is zero ([`editor_blk_move`](src/editor.c)).
+
+Use the same **three commas before the letter** idea for move: **`1,2,4M`**, not **`1,2M4`**.
+
+### **Query flag `?`**
+
+Put **`?` after the parameters and before the command letter**. Example: **`1?Sfoo`**. Do **not** start the line with **`?Sfoo`** — with no leading parameter list, **`?`** is not the query flag and you will usually get **Entry error**.
+
+### **`S` / `R` default range on a short buffer**
+
+With **no range given**, defaults are **start = current + 1**, **end = last line**. If the buffer has **one line** and **current** is **1**, that implies **start 2**, **end 1** → **invalid range** → **Entry error** (not **Not found**). Use an explicit range such as **`1,1Sfoo`** or **`1,1Rold;new`** to search or replace on line 1.
 
 ---
 
@@ -105,6 +132,8 @@ Some commands read **additional text** from the same line **after** the letter:
 - **` `** or **`*`** — **`*`** marks the **current line**,
 - a space,
 - the line **content**.
+
+So **`2L`** can list line **2** with a space in the marker column (not **`*`**) when the **current line** is still line **1** — only the current line gets **`*`**.
 
 ASCII control characters (except tab, CR, LF) are shown as **`^`** plus a letter (e.g. **`^C`** for byte `0x03`), similar to classic **DISPLAY**.
 
@@ -305,6 +334,8 @@ Implementation: [`cmd_dispatch`](src/commands.c), [`fileio_quit_abort`](src/file
 
 **Errors:** **Entry error** for bad range or too many parameters. No match prints **Not found**.
 
+**Default-range pitfall:** With **start** defaulted from **current + 1**, a **one-line** file and **current = 1** yields **start 2**, **end 1** — **invalid range** and **Entry error**, not **Not found**. To search line **1**, use an explicit range such as **`1,1Sfoo`** ([Parsing pitfalls](#parsing-pitfalls-comma-separated-forms)).
+
 Implementation: [`cmd_search`](src/commands.c).
 
 ---
@@ -322,6 +353,8 @@ Implementation: [`cmd_search`](src/commands.c).
 **Limits:** Rebuilt line length must not exceed **`EDLIN_MAX_LINE`** ([`EDLIN_MAX_LINE`](include/edlin.h)); otherwise **Line too long**.
 
 **Errors:** **Entry error**, **Not found**, **Line too long**.
+
+**Default-range pitfall:** Same as **`S`** — on a **one-line** buffer with **current = 1**, omitting the range can yield **Entry error** instead of **Not found**. Use e.g. **`1,1Rold;new`** to replace on line **1** ([Parsing pitfalls](#parsing-pitfalls-comma-separated-forms)).
 
 Implementation: [`cmd_replace`](src/commands.c).
 
@@ -364,7 +397,7 @@ Implementation: [`cmd_dispatch`](src/commands.c), [`editor_blk_move`](src/editor
 
 **Rest:** First path token after **`T`** (see above).
 
-**Errors:** **Entry error** if **`nparam != 1`** or path empty. Open/read/merge failures print **Invalid drive or file name** or **Not enough room to merge the entire file**.
+**Errors:** **Entry error** if **`nparam != 1`** or path empty. Open/read/merge failures print **Invalid drive or file name** or **Not enough room to merge the entire file**. **`Invalid drive or file name`** also covers **`fopen`** failing on the merge path — for example in **restricted or sandboxed** environments where the path looks valid but file access is blocked (optional integration coverage: set **`EDLIN_TEST_MERGE_IO=1`** per [`README.md`](README.md)).
 
 Implementation: [`cmd_dispatch`](src/commands.c), [`fileio_merge`](src/fileio.c).
 
@@ -414,6 +447,13 @@ Unused in code paths today but defined: **Cannot merge - Code page mismatch**, *
 - **`R` / `S` rest**: Classic **`GETTEXT`** used CR-terminated fields on one logical command line; this port documents **`;`** between **`old`** and **`new`** for **`R`**, and substring search via **`strstr`** (not DOS/Japanese-specific boundary rules).
 - **Move/Copy defaults**: MS-DOS EDLIN defaults missing line numbers to **current** in **`BLKMOVE`**; this implementation **requires explicit numeric parameters** matching the **`nparam`** gates (zeros are not rewritten to **current** before [`editor_blk_move`](src/editor.c)).
 - **Binary mode**: Matches the intent of **`/B`** (Ctrl-Z not EOF); exact DOS binary semantics may still differ on exotic encodings.
+- **`T` / merge I/O**: **`fopen`** on the merge path may fail under sandbox or policy restrictions; see **`Invalid drive or file name`** above and optional **`EDLIN_TEST_MERGE_IO`** in [`README.md`](README.md).
+
+---
+
+## Automation / scripting
+
+With **piped stdin** (non-TTY), **`I`** treats **Ctrl-Z** (**`^Z`**) as documented when it is the **first byte of a line** — that matches **`subprocess`**-style automation. **Interactive PTY** stacks can differ in how **EOF** and **line discipline** interact with **`^Z`**; the integration suite uses **pipe-style** **`subprocess`** for reliable **`^Z`** behavior ([`tests/test_edlin_commands.py`](tests/test_edlin_commands.py)).
 
 ---
 
