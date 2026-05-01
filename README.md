@@ -1,8 +1,33 @@
 # EDLIN — MS-DOS line editor source
 
-**EDLIN** is the classic line-oriented text editor shipped with MS-DOS: a prompt (`*`), line numbers, and single-letter commands (**L**ist, **I**nsert, **D**elete, **W**rite, etc.). This repository holds **only** the EDLIN utility sources extracted from the published MS-DOS corpus—8086 assembly for **DOS 4.00**–era behavior (system parser, message retriever, optional **`/B`** binary load, DBCS-related hooks in the headers).
+**EDLIN** is the classic line-oriented text editor shipped with MS-DOS: a prompt (`*`), line numbers, and single-letter commands (**L**ist, **I**nsert, **D**elete, **W**rite, etc.). This repository holds the historical **8086 assembly** EDLIN sources plus a portable **C11** reimplementation.
 
-## Contents
+## Portable C11 editor (`./edlin`)
+
+Build and run on macOS/Linux (needs a C compiler):
+
+```bash
+make
+./edlin myfile.txt
+./edlin /B binary.bin    # optional: binary mode (no Ctrl-Z cut on load)
+make test                  # parser unit test
+./tests/smoke.sh           # minimal stdin script (build `edlin` first)
+```
+
+Environment:
+
+- `EDLIN_ROWS` — logical screen length for **L** / **P** (default `25`).
+- `EDLIN_COLS` — reserved for future wrapping (default `80`).
+
+### C port notes
+
+- Uses **only** the C standard library (`stdio`, `stdlib`, `string`, `ctype`, `errno`).
+- Command letters and numeric arguments follow the original **`COMTAB`** / **`GETNUM`** behavior (see [`AGENT.md`](AGENT.md)); details differ where DOS calls cannot be reproduced (PSP, IOCTL screen probe, SYSMSG, INT 23h, extended attributes).
+- **Search / Replace**: patterns use `old;text` after **`R`** / **`S`** (semicolon separator); `^V` quoting is accepted as `0x16` in input lines.
+- **Save**: writes a scratch file (`filename.$$$`), then renames like the DOS utility (original → `.bak`, scratch → original).
+- Historical **`makefile.dos`** builds the original `.com`; the root **`Makefile`** builds the C binary only.
+
+## Historical assembly layout
 
 | Path | Purpose |
 |------|---------|
@@ -12,12 +37,12 @@
 | `edlmes.asm` | Message retriever / printf bridge |
 | `edlequ.asm`, `edlstdsw.inc` | Equates and build switches |
 | `edlin.skl` | Message skeleton for building localized message tables |
-| `makefile`, `edlin.lnk` | Link order: `EDLIN+EDLCMD1+EDLCMD2+EDLMES+EDLPARSE` → `edlin.com` |
+| `makefile.dos`, `edlin.lnk` | Original DOS link order: `EDLIN+EDLCMD1+EDLCMD2+EDLMES+EDLPARSE` → `edlin.com` |
 | `AGENT.md` | Structured summary for tools and contributors (commands, buffers, build caveats) |
 
-## Building
+### Building the original DOS binary
 
-The `makefile` expects a **full DOS build tree**: parent directories for `inc` (e.g. `dossym.inc`, `parse.asm`), `messages`, and tools (assembler, linker, `convert` to produce `.COM`, message build for `edlin.ctl`). **This checkout is not self-contained**; treat the sources as the authoritative reference until those dependencies are wired up.
+The **`makefile.dos`** recipe expects a **full MS-DOS build tree** (parent `inc`, `messages`, assembler, linker, `convert` to `.COM`, etc.). **This checkout does not include that tree**; treat the `.asm` files as the behavioral reference.
 
 ## License
 
