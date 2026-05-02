@@ -24,8 +24,10 @@ EDLIN_BIN = REPO_ROOT / "edlin"
 
 # Output after "New file" then main command prompt (TTY uses \\n).
 RE_NEWFILE_PROMPT = re.compile(r"New file\r?\n\*")
-# Insert / blank-line edit: six-digit line header + '*' + optional displayed text + newline.
-RE_LINE_HEADER = re.compile(r"\s*\d{1,6}\*[^\r\n]*\r?\n")
+# Blank-line edit: DOS-style "%1:%2" header + displayed text + newline (same as DISPLAY).
+RE_LINE_HEADER = re.compile(r"\s*\d{1,6}:[\* ][^\r\n]*\r?\n")
+# Append past last line (`#`): msg_line_prompt — no newline before stdin (same as insert).
+RE_APPEND_BLANK_PROMPT = re.compile(r"\s*\d{1,6}:\*")
 
 
 def setUpModule():
@@ -69,7 +71,7 @@ class EdlinSession:
             test.addCleanup(self.close)
 
     def expect_prompt(self):
-        """Main `*` prompt — not the `*` in six-digit line listings (`     12* `)."""
+        """Main `*` prompt — not the `*` in column listings (`     12:* `)."""
         assert self.child is not None
         self.child.expect(re.compile(r"(?:^|[\r\n])\*"))
 
@@ -78,9 +80,14 @@ class EdlinSession:
         self.child.expect(RE_NEWFILE_PROMPT)
 
     def expect_line_header(self):
-        """Wait for the numbered '* ' header line before stdin read (I / blank-line edit)."""
+        """Wait for msg_line_out blank-line header (newline-terminated) before stdin read."""
         assert self.child is not None
         self.child.expect(RE_LINE_HEADER)
+
+    def expect_append_blank_prompt(self):
+        """Wait for msg_line_prompt after `#` / append — no newline until user types."""
+        assert self.child is not None
+        self.child.expect(RE_APPEND_BLANK_PROMPT)
 
     def expect_entry_error_prompt(self):
         assert self.child is not None
@@ -278,6 +285,19 @@ class TestSemicolonNoop(unittest.TestCase):
 
 
 class TestInsertDeleteBlank(unittest.TestCase):
+    def test_insert_prompt_not_followed_by_newline_on_stdout(self):
+        """Insert uses msg_line_prompt (no newline after the '     1:*' prefix before read).
+
+        Pipe stdin is used so Ctrl-Z reaches the program as 0x1A (unlike many PTYs where
+        Ctrl-Z is job-control). Quit without list so we do not match a blank msg_line_out line.
+        """
+        with tempfile.TemporaryDirectory() as td:
+            wd = Path(td)
+            p = wd / "f.txt"
+            r = run_edlin_script(wd, str(p), b"1I\n\x1a\nq\ny\n")
+            self.assertEqual(r.returncode, 0)
+            self.assertNotIn(b"     1:*\n", r.stdout)
+
     def test_insert_ctrl_z_exit(self):
         with tempfile.TemporaryDirectory() as td:
             wd = Path(td)
@@ -320,7 +340,7 @@ class TestInsertDeleteBlank(unittest.TestCase):
             s.spawn([str(EDLIN_BIN), str(p)], self)
             s.expect_prompt()
             s.send_line("#")
-            s.expect_line_header()
+            s.expect_append_blank_prompt()
             s.send_line("b")
             s.expect_prompt()
             s.send_line("L")
@@ -367,8 +387,8 @@ class TestListPage(unittest.TestCase):
             s.expect_prompt()
             s.send_line("2L")
             s.expect_prompt()
-            # Current line remains 1 unless moved; line 2 column uses space not '*'.
-            self.assertRegex(s.child.before, r"2\s+two")
+            # Current line remains 1 unless moved; line 2 marker column is space not '*'.
+            self.assertRegex(s.child.before, r"2:\s*two")
 
     def test_pager_continue_prompt(self):
         with tempfile.TemporaryDirectory() as td:
@@ -562,8 +582,8 @@ class TestAppendWriteEndQuit(unittest.TestCase):
             s.expect_prompt()
             # first 2 lines of 8 written away: (8+3)//4 = 2; listing starts at old line 3
             # Old line 3 becomes line 1 after the first two lines are written away.
-            self.assertRegex(s.child.before, r"(?m)^\s*1\* 3")
-            self.assertNotRegex(s.child.before, r"(?m)^\s*1\* 1")
+            self.assertRegex(s.child.before, r"(?m)^\s*1:\*3")
+            self.assertNotRegex(s.child.before, r"(?m)^\s*1:\*1")
 
     def test_end_saves_file(self):
         with tempfile.TemporaryDirectory() as td:

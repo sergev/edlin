@@ -22,6 +22,7 @@ void msg_q_edit(void);
 void msg_mem_full(void);
 void msg_toolong(void);
 
+void msg_line_prompt(size_t line_1b);
 void msg_line_out(const char *content, size_t line_1b, int current_star);
 
 #endif /* MESSAGES_H */

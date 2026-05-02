@@ -82,9 +82,9 @@ Type each line of text, then **Enter**. When you are done inserting, press **Ctr
 Example session (what you type is after **`*`** or after the insert prompt):
 
 ```text
-* 1I
-     1*: First line of my notes
-     2*: Second line
+*1I
+     1:*First line of my notes
+     2:*Second line
 ^Z
 *
 ```
@@ -110,18 +110,18 @@ You are back at the shell.
 Listings look roughly like:
 
 ```text
-     1* First line of my notes
-     2  Second line
+     1:*First line of my notes
+     2: Second line
 ```
 
 - The **first column** is a line number (padded to six digits).
-- The next column is **`*`** only for the **current line**, otherwise a space.
+- Then a **colon**, then **`*`** only for the **current line**, otherwise a space (same **`%1:%2`** header as MS-DOS **DISPLAY**; see [`asm/edlin.skl`](asm/edlin.skl) message 32).
 - Then the text of the line.
 
 To list only some lines, give a range before **`L`**:
 
 ```text
-* 1,2L
+*1,2L
 ```
 
 You will see lines 1 through 2.
@@ -140,8 +140,8 @@ EDLIN shows that line and lets you type a **replacement** line.
 Example:
 
 ```text
-* 1
-     1*: First line of my notes
+*1
+     1:*First line of my notes
 completely new first line
 *
 ```
@@ -157,8 +157,8 @@ Then **`L`** to verify.
 **Insert before a specific line** — use **`I`** with a line number:
 
 ```text
-* 2I
-     2*: (new text goes here)
+*2I
+     2:*(new text goes here)
 ^Z
 *
 ```
@@ -170,8 +170,8 @@ That inserts **before** old line 2.
 **Append after the last line** — use **`#`** as a line reference. **`#`** means “last line plus one” (the position after the last line). Example for blank-line append:
 
 ```text
-* #
-     3*: 
+*#
+     3:* 
 another line at the end
 *
 ```
@@ -185,14 +185,14 @@ another line at the end
 **Delete one line** — e.g. delete line 2:
 
 ```text
-* 2D
+*2D
 *
 ```
 
 **Delete a range** — lines 2 through 4:
 
 ```text
-* 2,4D
+*2,4D
 *
 ```
 
@@ -216,7 +216,7 @@ beta
 From **`*`** after loading:
 
 ```text
-* Sbeta
+*Sbeta
 ```
 
 EDLIN finds the line containing **`beta`** and shows it; that line becomes current.
@@ -232,7 +232,7 @@ Rold;new
 Optional spaces around **`;`** are fine. Example:
 
 ```text
-* 1,1Rfoo;baz
+*1,1Rfoo;baz
 ```
 
 That searches only line **1** and turns **`foo`** into **`baz`** once on that line.
@@ -248,7 +248,7 @@ If the file has **only one line** and the current line is **1**, a plain **`S`**
 For **`S`** and **`R`**, you can ask for confirmation. Put **`?`** **after** any line numbers and **before** the command letter:
 
 ```text
-* 1?Sfindme
+*1?Sfindme
 ```
 
 When a match is found, EDLIN asks **O.K.?** — answer **`y`** or **`n`** (bare **Enter** counts as yes).
@@ -262,7 +262,7 @@ When a match is found, EDLIN asks **O.K.?** — answer **`y`** or **`n`** (bare 
 Copy lines **start** through **end** so they appear **before** line **dest**:
 
 ```text
-* 1,2,4C
+*1,2,4C
 ```
 
 That copies lines 1–2 and inserts that block before line 4.
@@ -277,7 +277,7 @@ That copies lines 1–2 and inserts that block before line 4.
 Same idea, but the source lines are **removed** after copying:
 
 ```text
-* 1,1M3
+*1,1M3
 ```
 
 Moves line 1 before line 3 (exact numbering after a move depends on your file).
@@ -291,7 +291,7 @@ Moves line 1 before line 3 (exact numbering after a move depends on your file).
 Example (conceptual):
 
 ```text
-* 1Tother.txt
+*1Tother.txt
 ```
 
 That merges **other.txt** before what was line **1** (line numbers shift after the insert).
@@ -322,7 +322,7 @@ Large edits sometimes use **Write** to flush the **beginning** of the buffer to 
 **`A`** (**Append**) reads **the rest** of the original input file from disk and appends to the buffer. You must supply **exactly one** line-number slot before **`A`** (classic EDLIN expects this parameter). Example:
 
 ```text
-* 1A
+*1A
 End of input file
 *
 ```
@@ -336,7 +336,7 @@ When nothing is left to read from disk, you typically see **End of input file**.
 To exit **without** saving your work as the final file:
 
 ```text
-* Q
+*Q
 Abort edit (Y/N)?
 ```
 

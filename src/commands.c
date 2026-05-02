@@ -165,7 +165,7 @@ static void cmd_insert(Editor *ed, const Cmd *cmd)
     }
     for (;;) {
         char line[300];
-        msg_line_out("", n, 1);
+        msg_line_prompt(n);
         if (read_line_stdin(line, sizeof line) != 0)
             break;
         if (line[0] == '\x1a')
@@ -205,7 +205,10 @@ static void cmd_nocom(Editor *ed, const Cmd *cmd)
     if (n <= ed->count) {
         const char *cur = editor_line_get(ed, n);
         char buf[300];
-        msg_line_out(cur ? cur : "", n, 1);
+        if (cur) {
+            msg_line_out(cur, n, 1);
+        }
+        msg_line_prompt(n);
         if (read_line_stdin(buf, sizeof buf) != 0)
             return;
         char out[300];
@@ -225,7 +228,7 @@ static void cmd_nocom(Editor *ed, const Cmd *cmd)
         ed->current = n;
     } else {
         char buf[300];
-        msg_line_out("", n, 1);
+        msg_line_prompt(n);
         if (read_line_stdin(buf, sizeof buf) != 0)
             return;
         editor_insert_before(ed, n, buf, strlen(buf));

@@ -128,8 +128,8 @@ Some commands read **additional text** from the same line **after** the letter:
 [`msg_line_out`](src/messages.c) prints:
 
 - A **six-digit** line number (no leading-zero suppression beyond width),
-- **` `** or **`*`** — **`*`** marks the **current line**,
-- a space,
+- a **colon** delimiter,
+- a **space** or **`*`** — **`*`** marks the **current line**,
 - the line **content**.
 
 So **`2L`** can list line **2** with a space in the marker column (not **`*`**) when the **current line** is still line **1** — only the current line gets **`*`**.
@@ -244,7 +244,7 @@ Implementation: [`cmd_delete`](src/commands.c).
 
 - **`param1`**: If **0**, insert **before** the **current** line.
 
-**Behavior:** Repeatedly prompts with a line header, reads stdin until **Ctrl-Z** on a line or EOF. **`^V`** quoting applies; long lines yield **Line too long**.
+**Behavior:** Repeatedly prints an insert prompt (same **`number`:`marker`** prefix as [`msg_line_out`](src/messages.c), **without** a newline after the prompt), reads stdin until **Ctrl-Z** on a line or EOF. **`^V`** quoting applies; long lines yield **Line too long**.
 
 **Errors:** **Entry error** if more than one numeric parameter.
 

@@ -25,6 +25,6 @@ tests/test_parser: tests/test_parser.c src/parser.c src/editor.c src/messages.c
 test-integration:
 	python3 -m unittest tests.test_edlin_commands -v
 
-test: tests/test_parser
+test: edlin tests/test_parser
 	./tests/test_parser
 	python3 -m unittest tests.test_edlin_commands -v

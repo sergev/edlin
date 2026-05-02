@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <string.h>
 
 #include "messages.h"
 
@@ -48,11 +47,21 @@ void msg_mem_full(void) { fputs("Insufficient memory\n", stdout); }
 
 void msg_toolong(void) { fputs("Line too long\n", stdout); }
 
+void msg_line_prompt(size_t line_1b)
+{
+    /* Same prefix as msg_line_out with current line marker; DOS uses "%1:%2" (edlin.skl). */
+    char prefix[16];
+    int n = snprintf(prefix, sizeof prefix, "%6zu:*", line_1b);
+    if (n > 0)
+        fwrite(prefix, 1, (size_t)n, stdout);
+    fflush(stdout);
+}
+
 void msg_line_out(const char *content, size_t line_1b, int current_star)
 {
-    /* Approximate "%d%c%s" line header — space vs * for current line */
+    /* DOS DISPLAY uses message "%1:%2" — line number, colon, line marker (* or space). */
     char prefix[16];
-    int n = snprintf(prefix, sizeof prefix, "%6zu%c ", line_1b, current_star ? '*' : ' ');
+    int n = snprintf(prefix, sizeof prefix, "%6zu:%c", line_1b, current_star ? '*' : ' ');
     if (n > 0)
         fwrite(prefix, 1, (size_t)n, stdout);
     /* Echo content with control-char display like DISPLAY (subset) */
