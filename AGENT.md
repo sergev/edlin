@@ -1,102 +1,74 @@
-# AGENT.md — EDLIN (MS-DOS line editor) — agent context
+# AGENT.md — EDLIN project context
 
-This file summarizes the historic **EDLIN** sources in this workspace so assistants can navigate, explain, or extend work related to this codebase without re-reading all assembly.
+This repository preserves historical MS-DOS EDLIN assembly sources and contains a runnable portable **C11** implementation. Treat `src/` as the active implementation and the `.asm` files as behavioral reference material.
 
-## What this tree is
+## Current Project Shape
 
-- **EDLIN** is a **line-oriented** text editor for DOS: one **current line**, commands typed on a **prompt**, text held in a memory buffer ending with **Ctrl+Z (0x1Ah)** as EOF marker.
-- These files match **MS-DOS EDLIN utility version 4.00** (1988) sources: module banners reference **SYSPARSE**, **message retriever**, **DBCS**, enhanced video, extended opens, etc. (`edlin.asm`, `edlequ.asm` headers).
-- The repo **`README.md`** describes the broader **Microsoft MS-DOS** source publication (MIT license). **`LICENSE`** is MIT, Copyright IBM and Microsoft Corporation.
-- **`makefile`** assumes a **parent DOS build tree** (`..\..\inc`, `..\..\messages`, `..\..\dos`, etc.). This checkout contains only the **EDLIN subset**; a full build requires those includes and tools (MASM/SALUT, LINK, `convert` to `.COM`, message build for `edlin.ctl`).
+- **Runnable editor:** `./edlin`, built from the C sources with the root `Makefile`.
+- **Source and headers:** all C implementation files and project headers live in `src/`.
+- **Tests:** `make test` builds `edlin`, runs `tests/test_parser`, then runs the Python integration suite in `tests/test_edlin_commands.py` via `unittest`/`pexpect`.
+- **User docs:** `README.md` gives build/run basics, `Manual.md` is the command reference, and `Tutorial.md` is the beginner walkthrough.
+- **Historical reference:** top-level `edlin.asm`, `edlcmd1.asm`, `edlcmd2.asm`, `edlmes.asm`, `edlparse.asm`, `edlequ.asm`, `edlstdsw.inc`, `edlin.skl`, `makefile.dos`, and `edlin.lnk`.
 
-## Module map and link order
+## Build and Run
 
-Link command (from headers): **`EDLIN+EDLCMD1+EDLCMD2+EDLMES+EDLPARSE`** → `EDLIN.EXE` (see `edlin.lnk`).
+```bash
+make
+./edlin myfile.txt
+./edlin /B binary.bin
+make test
+```
+
+The root `Makefile` builds only the C port. It uses `-Isrc`, compiles `src/*.c`, and treats `src/*.h` as object dependencies. `makefile.dos` is the historical DOS build recipe and still expects the wider MS-DOS build tree.
+
+Runtime environment:
+
+- `EDLIN_LINES` optionally overrides the logical screen height used by `L` and `P`; otherwise the C port asks `ioctl(TIOCGWINSZ)` and falls back to 25 rows.
+
+## C Port File Map
+
+| File | Role |
+|------|------|
+| `src/main.c` | Process startup, display-row setup, command loop, multi-command line handling. |
+| `src/parser.c`, `src/parser.h` | Invocation parsing (`/B`, filename) and EDLIN command parsing (`GETNUM`-style line refs, `?`, command letters). |
+| `src/editor.c`, `src/edlin.h` | Editor state, line storage, current line, insert/delete/replace, copy/move helpers. |
+| `src/commands.c`, `src/commands.h` | Interactive command dispatch and command behavior for blank-line edit, list/page, insert, delete, search/replace, copy/move, merge, help, quit/end handoff. |
+| `src/fileio.c`, `src/fileio.h` | Startup load, append, write, end/save, quit cleanup, merge-file I/O. |
+| `src/messages.c`, `src/messages.h` | User-visible messages, prompts, line display, help text. |
+| `tests/test_parser.c` | Small C parser regression test. |
+| `tests/test_edlin_commands.py` | Integration tests that drive `./edlin` through subprocesses and `pexpect`. |
+
+## Behavior to Preserve
+
+- EDLIN is line-oriented: one current line, a `*` prompt, numbered listings, and single-letter commands.
+- Invocation requires a filename; `/B` or `-B` enables binary mode so Ctrl-Z bytes are kept as data during load/append.
+- Valid commands in the C port are `A C D E H I L M P Q R S T W`, plus blank-line edit and `;` no-op/separator.
+- Multiple commands on one physical input line are separated by `;` or Ctrl-Z (`0x1A`).
+- Line references follow classic `GETNUM` ideas: decimal line numbers, `.`, `#` as last line plus one, `+n`, `-n`, comma-separated parameters, and special fourth-parameter restrictions.
+- `?` after numeric parameters enables query mode for search/replace.
+- Saved text-mode files end with Ctrl-Z; `/B` changes Ctrl-Z treatment on input.
+- Scratch save behavior follows DOS style: write to `filename.$$$`, rename original to `.bak`, then rename scratch to the original path.
+
+## Historical Assembly Reference
+
+The assembly modules document the original MS-DOS EDLIN behavior:
 
 | Module | Role |
 |--------|------|
-| **`edlin.asm`** | Entry **`EDLIN`**, main **command loop** (`COMMAND`), **`GETNUM`** / parameter parsing, **`COMTAB`** dispatch table, **MOVE/COPY** (`BLKMOVE`), video save/restore (**`EDLIN_DISP_GET`**), bridge **`EDLIN_COMMAND`** from external parser. |
-| **`edlcmd1.asm`** | Core editing helpers: **`APPEND`**, **`DELETE`**, listing/paging hooks, errors, etc. (exports include **`append`**, **`delete`**, **`pager`**, **`list`**, **`ewrite`**, **`wrt`**, …). |
-| **`edlcmd2.asm`** | Additional command implementation and **display/pagination** helpers (**`EDLIN_DISP_COUNT`**, **`EDLIN_PG_COUNT`**, **`EDLIN_PG_PROMPT`** — “Continue (Y/N)?”). |
-| **`edlmes.asm`** | **Message retriever** integration: **`PRE_LOAD_MESSAGE`**, **`printf`**, **`disp_fatal`**, `SYSLOADMSG` / `SYSDISPMSG` style display. |
-| **`edlparse.asm`** | External **`PARSER_COMMAND`**: DOS command line → **required filespec**, optional **`/B`** switch (see below). |
-| **`edlequ.asm`** | Shared **equates** (stack size, video IOCTL, extended open flags, parse exit codes, **`Display_Buffer_Struc`**, Y/N validation). |
-| **`edlstdsw.inc`** | Build/personality switches (e.g. **IBM**, **WANG**, **Rainbow**, escape/cancel keys). **`DOSSYM.INC`** / **`EDLSTDSW.INC`** are pulled via `edlequ.asm` in a full tree. |
-| **`edlin.skl`** | **Message skeleton** for building localized/packed messages (`FASTBLD` / country `.msg` in full build). Defines prompt **`*`**, fatals, “Invalid drive…”, “New file”, merge/codepage strings, etc. |
+| `edlin.asm` | Entry point, main command loop, `GETNUM`, `COMTAB`, move/copy, video save/restore hooks. |
+| `edlcmd1.asm`, `edlcmd2.asm` | Original command implementations and display/pagination helpers. |
+| `edlmes.asm` | Message retriever / `SYSLOADMSG` / `SYSDISPMSG` style integration. |
+| `edlparse.asm` | DOS command-line parser: required filespec and optional `/B`. |
+| `edlequ.asm`, `edlstdsw.inc` | Shared equates and build/personality switches. |
+| `edlin.skl` | Message skeleton with prompts and error strings. |
+| `edlin.lnk` | Historical link order: `EDLIN+EDLCMD1+EDLCMD2+EDLMES+EDLPARSE`. |
 
-## External invocation (`EDLPARSE`)
+Use these files to resolve compatibility questions, but implement changes in the C port unless the user specifically asks about the historical sources.
 
-- **Required:** a **filespec** (path to file to create or edit).
-- **Optional:** **`/B`** — binary mode: documented in parser as switching whether **Ctrl+Z is treated as end-of-file** vs literal (`loadmod` / “viceversa” in `edlin.asm` data).
-- Parser uses **system parser (SYSPARSE)**; control blocks in `edlparse.asm` describe **one filespec** and **one switch**.
+## Guidance for Coding Agents
 
-## Interactive commands (from `COMTAB` / `TABLE` in `edlin.asm`)
-
-The command letter is looked up in **`COMTAB`** after optional **line arguments** and optional **`?`** (sets **`QFLG`** for **query** on applicable commands).
-
-**`COMTAB`** bytes (order matters for dispatch): **CR (13)**, **`;`**, then **`A C D E I L M P Q R S T W`**.
-
-| Letter | Label / behavior (from `TABLE`) |
-|--------|-----------------------------------|
-| *(CR)* | **`NOCOM`** — blank line |
-| **`;`** | **`NOCOM`** — no-op / remark-style line |
-| **`A`** | **`APPEND`** — read more lines from input file into buffer |
-| **`C`** | **`COPY`** — block copy (needs **3** parameters; see `COPY`/`MOVE`) |
-| **`D`** | **`DELETE`** — delete line range |
-| **`E`** | **`ENDED`** — end edit (save & exit in classic EDLIN semantics) |
-| **`I`** | **`INSERT`** — insert lines before current/specified line |
-| **`L`** | **`LIST`** — list lines |
-| **`M`** | **`MOVE`** — block move (**`MOVFLG`** vs copy) |
-| **`P`** | **`PAGER`** — page through text |
-| **`Q`** | **`QUIT`** — quit (typically abandons; prompts in messages) |
-| **`R`** | **`replac_from_curr`** — replace text |
-| **`S`** | **`search_from_curr`** — search (`srchmod` controls scope in data) |
-| **`T`** | **`MERGE`** — merge (**Transfer**) from another file |
-| **`W`** | **`EWRITE`** — write lines to disk |
-
-**Multiple commands** on one input line are separated by **`;`** after the first command (parser resumes at `PARSE`).
-
-## Line argument syntax (`GETNUM` in `edlin.asm`)
-
-- **`nnn`** — absolute line number (non-zero; zero is invalid).
-- **`.`** — **current line** (`CURRENT`).
-- **`#`** — **last line plus one** (GETNUM `MAXLIN`: counts LF characters and resolves to the EOF insertion index).
-- **`+n`** / **`-n`** — relative to **current line** (clamped to at least line 1 for `-`).
-- Parameters can be **comma-separated**; up to **four** numeric parameters with special handling for the **fourth** (`.`, `#`, `+`, `-` disallowed there — errors go to **`COMERR`**).
-- Optional **`?`** before the command letter enables **query** mode (**`QFLG`**).
-
-## Important buffer / state (from `edlin.asm` data definitions)
-
-- **`START`** — beginning of in-memory file; byte **before** `START` must be **< 40H** (constraint for DBCS back-scan).
-- **`ENDTXT`** — pointer to **Ctrl+Z** EOF in buffer.
-- **`CURRENT`** / **`POINTER`** — 1-based current line index and offset to current line.
-- **`LAST`** — end of available memory for buffer.
-- **`THREE4TH`** — threshold (~75% full) used with **`APPEND`** to avoid overfilling.
-- **`COMBUF`** — DOS buffered input for command line (**80h** max buffer byte).
-- **`EDITBUF`** — line edit buffer (**258** bytes).
-- **`path_name`**, **`rd_handle`**, **`wrt_handle`** — active files.
-
-## Messages (`edlin.skl`)
-
-Skeleton defines utility classes: drive/name errors, read-only, disk full, **“Entry error”** (`BADCOM`), **“New file”**, **“O.K.? ”**, **“Abort edit (Y/N)? ”**, **“Continue (Y/N)? ”**, merge errors, **code page mismatch** on merge, etc. Message numbers tie into **`edlmes.asm`** tables.
-
-## Guidance for coding agents
-
-1. **Respect linkage and table order** — **`COMTAB`** and **`TABLE`** must stay in sync (`edlin.asm` warns: *“Careful changing the order…”*).
-2. **Full builds** need the parent **`inc`**, **`parse.asm`**, **`sysmsg.inc`**, **`dossym.inc`**, and country **`.msg`** files referenced in **`makefile`**; do not assume **`make`** works from this folder alone.
-3. **`include` paths** in `makefile` point **outside** this directory; grep or edits should account for **missing headers** in a sparse checkout.
-4. **Historical accuracy:** README on upstream MS-DOS repo says sources are **reference** and PRs against original files are discouraged; follow repo policy if this tree inherits it.
-5. **Reimplementation / ports:** preserve **command letters**, **parameter rules**, **`/B`**, and **EOF (^Z)** semantics if claiming EDLIN compatibility.
-
-## Quick file index
-
-- **Main logic & dispatch:** `edlin.asm`
-- **Commands / I-O:** `edlcmd1.asm`, `edlcmd2.asm`
-- **CLI parse:** `edlparse.asm`
-- **Strings / SYSMSG:** `edlmes.asm`, `edlin.skl`
-- **Shared constants:** `edlequ.asm`, `edlstdsw.inc`
-- **Build:** `makefile`, `edlin.lnk`
-
----
-
-*Generated from the sources in this repository (`edlin.asm` `COMTAB`/`GETNUM`, `edlparse.asm`, `edlequ.asm`, `edlin.skl`, `makefile`).*
+1. Prefer existing C port patterns and keep behavior aligned with `Manual.md` and the integration tests.
+2. When changing command parsing or command behavior, add or update focused tests in `tests/test_parser.c` and/or `tests/test_edlin_commands.py`.
+3. Preserve command letters, parameter rules, `/B`, Ctrl-Z, scratch-file, `.bak`, and current-line semantics unless the user explicitly asks for a compatibility change.
+4. Keep project headers in `src/`; do not reintroduce an `include/` directory without a clear project-wide reason.
+5. For historical accuracy questions, compare against the assembly sources before changing the C port.
