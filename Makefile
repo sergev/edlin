@@ -1,7 +1,7 @@
 # Portable C11 EDLIN (historical DOS sources in *.asm are reference only).
 
 CC ?= cc
-CFLAGS ?= -std=c11 -Wall -Wextra -g -Iinclude
+CFLAGS ?= -std=c11 -Wall -Wextra -g -Isrc
 
 SRCS := src/main.c src/parser.c src/editor.c src/commands.c src/fileio.c src/messages.c
 OBJS := $(SRCS:.c=.o)
@@ -13,7 +13,7 @@ all: edlin
 edlin: $(OBJS)
 	$(CC) $(LDFLAGS) -o $@ $(OBJS)
 
-src/%.o: src/%.c $(wildcard include/*.h)
+src/%.o: src/%.c $(wildcard src/*.h)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:

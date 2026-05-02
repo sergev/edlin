@@ -1,6 +1,6 @@
 # EDLIN User Manual
 
-This manual describes the **C11 EDLIN** implementation in this repository ([`src/`](src/), [`include/`](include/)). Behavior matches classic MS-DOS EDLIN where the port intends compatibility; differences are called out in **Portability and differences from DOS EDLIN** at the end.
+This manual describes the **C11 EDLIN** implementation in this repository ([`src/`](src/)). Behavior matches classic MS-DOS EDLIN where the port intends compatibility; differences are called out in **Portability and differences from DOS EDLIN** at the end.
 
 ---
 
@@ -47,7 +47,7 @@ After startup, the editor prints **`*`** and reads a **command line** from stand
 
 ## Command line syntax (before the command letter)
 
-The parser ([`parse_command`](src/parser.c)) builds a **`Cmd`**: up to **four numeric parameters**, an optional **`?`**, then a **command letter** ([`include/parser.h`](include/parser.h)).
+The parser ([`parse_command`](src/parser.c)) builds a **`Cmd`**: up to **four numeric parameters**, an optional **`?`**, then a **command letter** ([`src/parser.h`](src/parser.h)).
 
 ### Numeric parameters
 
@@ -158,7 +158,7 @@ Each subsection lists **purpose**, **parameters**, **defaults**, **behavior**, a
 
 **Behavior:**
 
-- If the target line **exists**, its text is shown and you enter a replacement line from stdin (**`^V`** quoting supported). Length is capped ([`EDLIN_MAX_LINE`](include/edlin.h)).
+- If the target line **exists**, its text is shown and you enter a replacement line from stdin (**`^V`** quoting supported). Length is capped ([`EDLIN_MAX_LINE`](src/edlin.h)).
 - If the target is **line count + 1** (the **`#`** / “last line plus one” position — EOF pseudo-line), **nothing is read from stdin**; [`cmd_nocom`](src/commands.c) only sets **current line** to that position (matches classic **`NOCOM`** when the pointer is already at end-of-text). To append real lines after the last line, use **`#I`** (insert before line last+1) or another command that accepts that line reference.
 
 **Errors:** **Entry error** if more than one numeric parameter is supplied, or the target line is invalid.
@@ -363,7 +363,7 @@ Implementation: [`cmd_search`](src/commands.c).
 
 **Query:** With **`?`**, shows the proposed line and **O.K.?** before applying.
 
-**Limits:** Rebuilt line length must not exceed **`EDLIN_MAX_LINE`** ([`EDLIN_MAX_LINE`](include/edlin.h)); otherwise **Line too long**.
+**Limits:** Rebuilt line length must not exceed **`EDLIN_MAX_LINE`** ([`EDLIN_MAX_LINE`](src/edlin.h)); otherwise **Line too long**.
 
 **Errors:** **Entry error**, **Not found**, **Line too long**.
 
@@ -474,9 +474,9 @@ With **piped stdin** (non-TTY), a line containing only **`.`** ends insert mode 
 | Topic | Primary files |
 |-------|----------------|
 | Invocation | [`src/main.c`](src/main.c), [`src/parser.c`](src/parser.c) |
-| Command parsing | [`src/parser.c`](src/parser.c), [`include/parser.h`](include/parser.h) |
+| Command parsing | [`src/parser.c`](src/parser.c), [`src/parser.h`](src/parser.h) |
 | Commands | [`src/commands.c`](src/commands.c) |
-| Buffer / move-copy | [`src/editor.c`](src/editor.c), [`include/edlin.h`](include/edlin.h) |
+| Buffer / move-copy | [`src/editor.c`](src/editor.c), [`src/edlin.h`](src/edlin.h) |
 | File I/O | [`src/fileio.c`](src/fileio.c) |
 | Messages | [`src/messages.c`](src/messages.c) |
 
