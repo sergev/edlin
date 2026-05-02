@@ -7,6 +7,9 @@
 #include "fileio.h"
 #include "messages.h"
 
+//
+// Returns 1 if string s ends with suffix suf, ignoring ASCII letter case.
+//
 static int ends_with_ci(const char *s, const char *suf)
 {
     size_t ls = strlen(s);
@@ -26,6 +29,9 @@ static int ends_with_ci(const char *s, const char *suf)
     return 1;
 }
 
+//
+// Builds a scratch filename like.basename$$$ next to the real path for temp saves.
+//
 static int build_temp_path(const char *src, char **out)
 {
     size_t n = strlen(src);
@@ -47,6 +53,10 @@ static int build_temp_path(const char *src, char **out)
     return 0;
 }
 
+//
+// Splits loaded file bytes into lines (newlines, optional CR, optional ^Z in text mode).
+// Appends each segment as a new line at the end of the editor buffer.
+//
 static int append_loaded_lines(Editor *ed, const unsigned char *buf, size_t len, int binary_mode)
 {
     size_t i = 0;
@@ -81,6 +91,10 @@ static int append_loaded_lines(Editor *ed, const unsigned char *buf, size_t len,
     return 0;
 }
 
+//
+// Opens the file, loads it into memory as lines, and opens a temp file for later W/E.
+// New files get an empty buffer; .bak names are rejected; read errors are reported.
+//
 int fileio_startup(Editor *ed, const char *path, int binary_mode)
 {
     ed->binary_mode = binary_mode;
@@ -174,6 +188,9 @@ int fileio_startup(Editor *ed, const char *path, int binary_mode)
     return 0;
 }
 
+//
+// Reads any remaining bytes from the original file on disk and appends them as new lines.
+//
 int fileio_append(Editor *ed, unsigned nlines_param)
 {
     (void)nlines_param;
@@ -229,6 +246,9 @@ int fileio_append(Editor *ed, unsigned nlines_param)
     return 0;
 }
 
+//
+// Opens the writable temp file on first use so W/E can flush lines to disk.
+//
 static int ensure_wr(Editor *ed)
 {
     if (ed->wr_fp)
@@ -241,6 +261,10 @@ static int ensure_wr(Editor *ed)
     return 0;
 }
 
+//
+// Writes the first chunk of lines to the scratch file and removes them from memory.
+// If param1 is 0, writes about one quarter of all lines (classic EDLIN heuristic).
+//
 int fileio_write(Editor *ed, unsigned param1)
 {
     if (ensure_wr(ed) != 0) {
@@ -253,7 +277,7 @@ int fileio_write(Editor *ed, unsigned param1)
         if (param1 <= ed->count)
             until = param1 - 1;
     } else {
-        /* Quarter heuristic on line count */
+        // Quarter heuristic on line count
         until = ed->count ? (ed->count + 3) / 4 : 0;
     }
 
@@ -271,6 +295,9 @@ int fileio_write(Editor *ed, unsigned param1)
     return 0;
 }
 
+//
+// Saves every remaining line to the temp file, applies .bak rename, replaces the real file, exits.
+//
 int fileio_end(Editor *ed)
 {
     if (ensure_wr(ed) != 0) {
@@ -333,6 +360,9 @@ int fileio_end(Editor *ed)
     exit(0);
 }
 
+//
+// Discards the scratch file and exits immediately without writing the main file (quit confirmed).
+//
 void fileio_quit_abort(Editor *ed)
 {
     if (ed->wr_fp) {
@@ -348,6 +378,9 @@ void fileio_quit_abort(Editor *ed)
     exit(0);
 }
 
+//
+// Loads merge_path as its own buffer of lines, then inserts those lines before dest_line.
+//
 int fileio_merge(Editor *ed, unsigned dest_line, const char *merge_path)
 {
     FILE *m = fopen(merge_path, "rb");

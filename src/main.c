@@ -10,12 +10,19 @@
 #include "messages.h"
 #include "parser.h"
 
+//
+// Skips spaces and tab characters at *p so parsing can continue at the next token.
+//
 static void skip_ws(char **p)
 {
     while (**p == ' ' || **p == '\t')
         (*p)++;
 }
 
+//
+// Reads an environment variable as a decimal number. If missing or zero, returns def.
+// Used for EDLIN_LINES so users can set screen height without ioctl.
+//
 static unsigned env_u(const char *name, unsigned def)
 {
     const char *s = getenv(name);
@@ -27,7 +34,10 @@ static unsigned env_u(const char *name, unsigned def)
     return v ? v : def;
 }
 
-/* Terminal height for L/P when EDLIN_LINES is unset; fallback 25 if not a tty or ioctl fails. */
+//
+// Asks the terminal how many text rows it has (for list/page window sizes).
+// If stdin is not a tty or the query fails, returns 25 like classic EDLIN defaults.
+//
 static unsigned tty_rows(void)
 {
     struct winsize ws;
@@ -38,6 +48,10 @@ static unsigned tty_rows(void)
     return (unsigned)ws.ws_row;
 }
 
+//
+// Handles one line the user typed: may contain several commands separated by ';'.
+// Parses each command, runs it, and skips past errors so the rest of the line can run.
+//
 static void run_input_line(Editor *ed, char *line)
 {
     char *p = line;
@@ -53,7 +67,7 @@ static void run_input_line(Editor *ed, char *line)
             break;
         if (r == PARSE_ERR) {
             msg_entry_error();
-            /* Skip to next semicolon or end */
+            // Skip to next semicolon or end
             p = save;
             while (*p && *p != ';')
                 ++p;
@@ -72,6 +86,10 @@ static void run_input_line(Editor *ed, char *line)
     }
 }
 
+//
+// Program entry: reads command-line file path, loads the file, then loops reading lines.
+// Each line is split into EDLIN commands; '*' is the prompt; Ctrl-Z can separate commands.
+//
 int main(int argc, char **argv)
 {
     char *path = NULL;

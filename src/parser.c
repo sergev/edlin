@@ -5,6 +5,9 @@
 #include "edlin.h"
 #include "parser.h"
 
+//
+// Returns 1 if s starts with the ASCII prefix pfx, ignoring letter case for letters.
+//
 static int starts_with_ci(const char *s, const char *pfx)
 {
     for (; *pfx; ++pfx, ++s) {
@@ -16,6 +19,10 @@ static int starts_with_ci(const char *s, const char *pfx)
     return 1;
 }
 
+//
+// Reads argv[1..]: optional "/B" or "-B" enables binary mode (no ^Z end-of-file).
+// Exactly one non-option argument must be the file path; otherwise returns -1.
+//
 int parse_invocation(int argc, char **argv, char **out_path, int *out_binary)
 {
     if (!out_path || !out_binary)
@@ -33,7 +40,7 @@ int parse_invocation(int argc, char **argv, char **out_path, int *out_binary)
         if (!path)
             path = argv[i];
         else
-            return -1; /* too many args */
+            return -1; // too many args
     }
     if (!path)
         return -1;
@@ -41,6 +48,9 @@ int parse_invocation(int argc, char **argv, char **out_path, int *out_binary)
     return 0;
 }
 
+//
+// Advances *p past ASCII spaces and tabs only (not newlines).
+//
 static void skip_ws(char **p)
 {
     while (**p == ' ' || **p == '\t')
@@ -49,6 +59,10 @@ static void skip_ws(char **p)
 
 static int get_num(Editor *ed, char **p, unsigned *out, int fourth);
 
+//
+// Parses one line reference: ".", "#", "+n", "-n", or a plain number from the input.
+// Fourth-parameter slot has stricter rules (used for copy/move repeat count).
+//
 static int get_lineref(Editor *ed, char **p, unsigned *out, int fourth)
 {
     skip_ws(p);
@@ -63,7 +77,7 @@ static int get_lineref(Editor *ed, char **p, unsigned *out, int fourth)
         if (fourth)
             return -1;
         (*p)++;
-        /* Byte-buffer semantics: “line after last” ≈ count + 1 (see GETNUM MAXLIN) */
+        // Byte-buffer semantics: “line after last” ≈ count + 1 (see GETNUM MAXLIN)
         *out = (unsigned)ed->count + 1u;
         return 0;
     }
@@ -94,6 +108,10 @@ static int get_lineref(Editor *ed, char **p, unsigned *out, int fourth)
     return get_num(ed, p, out, fourth);
 }
 
+//
+// Reads a decimal line number from the input; empty reads as 0 (meaning “default”).
+// Rejects overflow and zero as an explicit number (EDLIN line numbers start at 1).
+//
 static int get_num(Editor *ed, char **p, unsigned *out, int fourth)
 {
     (void)ed;
@@ -118,17 +136,24 @@ static int get_num(Editor *ed, char **p, unsigned *out, int fourth)
     return 0;
 }
 
+//
+// Maps the command letter to an internal table index, or -1 if the letter is unknown.
+//
 static int dispatch_index(char cmd)
 {
     static const char tab[] = {'\r', ';', 'A', 'C', 'D', 'E', 'H', 'I', 'L',
                                'M', 'P', 'Q', 'R', 'S', 'T', 'W'};
-    for (size_t i = 0; i < sizeof tab; ++i) {
+    for (size_t i = 0; i < sizeof tab / sizeof tab[0]; ++i) {
         if (tab[i] == cmd)
             return (int)i;
     }
     return -1;
 }
 
+//
+// Parses commas-separated line refs, optional "?" (query), then the command letter.
+// CR / LF / end with no letter means “blank-line edit”; ';' alone is a no-op separator.
+//
 ParseResult parse_command(Editor *ed, char **ptr_inout, Cmd *cmd)
 {
     char *s = *ptr_inout;
@@ -165,7 +190,7 @@ ParseResult parse_command(Editor *ed, char **ptr_inout, Cmd *cmd)
         skip_ws(&s);
     }
 
-    /* CR / newline -> blank-line edit */
+    // CR / newline -> blank-line edit
     if (*s == '\0' || *s == '\n' || *s == '\r') {
         cmd->code = '\r';
         *ptr_inout = s;

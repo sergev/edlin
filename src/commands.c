@@ -7,14 +7,19 @@
 #include "fileio.h"
 #include "messages.h"
 
+//
+// Skips spaces and tabs at *p (same idea as the parser’s skip_ws).
+//
 static void skip_ws(char **p)
 {
     while (**p == ' ' || **p == '\t')
         (*p)++;
 }
 
-/* Copy one GETTEXT field: ends at unquoted CR (not used in our buffer), ';', or NUL.
- * ^V (0x16) quotes next byte. */
+//
+// Copies one field from R/S command text: stops at ';' or end of line.
+// Ctrl-V (0x16) quotes the next character so ';' can appear inside a field.
+//
 static int gettext_field(char **pp, char *buf, size_t bufsz)
 {
     size_t n = 0;
@@ -38,6 +43,9 @@ static int gettext_field(char **pp, char *buf, size_t bufsz)
     return 0;
 }
 
+//
+// Reads one line from stdin and removes a trailing CR/LF so the rest is plain text.
+//
 static int read_line_stdin(char *buf, size_t sz)
 {
     if (!fgets(buf, (int)sz, stdin))
@@ -48,6 +56,9 @@ static int read_line_stdin(char *buf, size_t sz)
     return 0;
 }
 
+//
+// Asks Y/N and returns 1 for yes, 0 for no; empty line counts as yes (DOS style).
+//
 static int prompt_yn(void)
 {
     char b[32];
@@ -63,6 +74,9 @@ static int prompt_yn(void)
     return prompt_yn();
 }
 
+//
+// L command: prints a window of lines with line numbers and * on the current line.
+//
 static void cmd_list(Editor *ed, const Cmd *cmd)
 {
     unsigned start = cmd->param[0];
@@ -98,6 +112,9 @@ static void cmd_list(Editor *ed, const Cmd *cmd)
     }
 }
 
+//
+// P command: like list but pauses every screenful and updates current line as it goes.
+//
 static void cmd_pager(Editor *ed, const Cmd *cmd)
 {
     unsigned last = ed->count ? (unsigned)ed->count : 1u;
@@ -138,6 +155,9 @@ static void cmd_pager(Editor *ed, const Cmd *cmd)
     }
 }
 
+//
+// D command: deletes a range of lines; omitted params default to the current line only.
+//
 static void cmd_delete(Editor *ed, const Cmd *cmd)
 {
     unsigned p1 = cmd->param[0];
@@ -154,11 +174,14 @@ static void cmd_delete(Editor *ed, const Cmd *cmd)
     ed->current = p1 <= ed->count ? p1 : (ed->count ? ed->count : 1u);
 }
 
+//
+// I command: repeatedly reads lines from the user and inserts before line n until "." or ^Z.
+//
 static void cmd_insert(Editor *ed, const Cmd *cmd)
 {
     unsigned n = cmd->param[0];
     if (n == 0)
-        n = (unsigned)ed->current; /* insert before current line */
+        n = (unsigned)ed->current; // insert before current line
     if (n < 1) {
         msg_entry_error();
         return;
@@ -170,10 +193,10 @@ static void cmd_insert(Editor *ed, const Cmd *cmd)
             break;
         if (line[0] == '\x1a')
             break;
-        /* Single dot ends insert (modern alternative to Ctrl-Z); ^V. inserts a literal dot */
+        // Single dot ends insert (modern alternative to Ctrl-Z); ^V. inserts a literal dot
         if (strcmp(line, ".") == 0)
             break;
-        /* unquote ^V */
+        // unquote ^V
         char out[300];
         size_t o = 0;
         for (size_t i = 0; line[i] && o + 1 < sizeof out; ++i) {
@@ -192,6 +215,9 @@ static void cmd_insert(Editor *ed, const Cmd *cmd)
     }
 }
 
+//
+// Blank-line edit: only a line number — show line, then replace it or append after last line.
+//
 static void cmd_nocom(Editor *ed, const Cmd *cmd)
 {
     if (cmd->nparam > 1) {
@@ -239,6 +265,9 @@ static void cmd_nocom(Editor *ed, const Cmd *cmd)
     }
 }
 
+//
+// S command (and shared logic): finds old text in a line range; optional query before stopping.
+//
 static void cmd_search(Editor *ed, const Cmd *cmd, char **rio, int from_current)
 {
     if (cmd->nparam > 2) {
@@ -291,6 +320,9 @@ static void cmd_search(Editor *ed, const Cmd *cmd, char **rio, int from_current)
     msg_not_found();
 }
 
+//
+// R command: parses old;new fields, finds first hit in range, optionally asks, then replaces once.
+//
 static void cmd_replace(Editor *ed, const Cmd *cmd, char **rio, int from_current)
 {
     if (cmd->nparam > 2) {
@@ -358,6 +390,9 @@ static void cmd_replace(Editor *ed, const Cmd *cmd, char **rio, int from_current
     msg_not_found();
 }
 
+//
+// Central switch: runs the right handler for the parsed command letter and trailing merge path.
+//
 void cmd_dispatch(Editor *ed, const Cmd *cmd, char **rest_after_cmd)
 {
     char *rest = rest_after_cmd ? *rest_after_cmd : NULL;

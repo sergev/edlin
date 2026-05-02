@@ -3,6 +3,9 @@
 
 #include "edlin.h"
 
+//
+// Allocates a copy of string s on the heap (caller frees via editor_free / delete).
+//
 static char *dup_line(const char *s)
 {
     size_t n = strlen(s);
@@ -13,6 +16,9 @@ static char *dup_line(const char *s)
     return p;
 }
 
+//
+// Sets the editor to an empty document: no lines, current line 1, default screen rows.
+//
 void editor_init(Editor *ed)
 {
     memset(ed, 0, sizeof *ed);
@@ -20,6 +26,9 @@ void editor_init(Editor *ed)
     ed->disp_rows = 25;
 }
 
+//
+// Frees every stored line and path string, closes FILE handles, and clears the struct.
+//
 void editor_free(Editor *ed)
 {
     if (!ed)
@@ -42,6 +51,9 @@ void editor_free(Editor *ed)
     memset(ed, 0, sizeof *ed);
 }
 
+//
+// Ensures the lines array can hold at least `need` pointers (grows by doubling).
+//
 int editor_resize(Editor *ed, size_t need)
 {
     if (need <= ed->cap)
@@ -57,8 +69,14 @@ int editor_resize(Editor *ed, size_t need)
     return 0;
 }
 
+//
+// Returns how many lines are in the buffer (0 means an empty file).
+//
 size_t editor_last_line(const Editor *ed) { return ed->count; }
 
+//
+// Verifies that line_1b is between 1 and the line count; optionally outputs zero-based index.
+//
 int editor_find_line(const Editor *ed, size_t line_1b, size_t *out_idx)
 {
     if (line_1b == 0 || line_1b > ed->count)
@@ -68,6 +86,9 @@ int editor_find_line(const Editor *ed, size_t line_1b, size_t *out_idx)
     return 0;
 }
 
+//
+// Returns the text of line line_1b, or NULL if that line number does not exist.
+//
 const char *editor_line_get(const Editor *ed, size_t line_1b)
 {
     size_t ix;
@@ -76,12 +97,18 @@ const char *editor_line_get(const Editor *ed, size_t line_1b)
     return ed->lines[ix];
 }
 
+//
+// Returns strlen of the given line’s text, or 0 if the line is missing.
+//
 size_t editor_line_len(const Editor *ed, size_t line_1b)
 {
     const char *s = editor_line_get(ed, line_1b);
     return s ? strlen(s) : 0;
 }
 
+//
+// Inserts one new line at zero-based index idx0, shifting later lines up.
+//
 static int insert_raw(Editor *ed, size_t idx0, const char *text, size_t len)
 {
     if (editor_resize(ed, ed->count + 1) != 0)
@@ -96,6 +123,9 @@ static int insert_raw(Editor *ed, size_t idx0, const char *text, size_t len)
     return 0;
 }
 
+//
+// Adds blank lines at the end until line number line_1b exists (for sparse addressing).
+//
 int editor_ensure_line(Editor *ed, size_t line_1b)
 {
     while (ed->count < line_1b) {
@@ -105,6 +135,9 @@ int editor_ensure_line(Editor *ed, size_t line_1b)
     return 0;
 }
 
+//
+// Inserts a new line with given text immediately before line line_1b (1 .. count+1).
+//
 int editor_insert_before(Editor *ed, size_t line_1b, const char *text, size_t len)
 {
     if (line_1b < 1)
@@ -115,6 +148,9 @@ int editor_insert_before(Editor *ed, size_t line_1b, const char *text, size_t le
     return insert_raw(ed, idx, text, len);
 }
 
+//
+// Replaces the entire contents of an existing line with new text (same line number).
+//
 int editor_replace_line(Editor *ed, size_t line_1b, const char *text, size_t len)
 {
     size_t ix;
@@ -130,6 +166,9 @@ int editor_replace_line(Editor *ed, size_t line_1b, const char *text, size_t len
     return 0;
 }
 
+//
+// Deletes every line from first_1b through last_1b and compacts the array.
+//
 int editor_delete_range(Editor *ed, size_t first_1b, size_t last_1b)
 {
     if (first_1b < 1 || last_1b < first_1b || last_1b > ed->count)
@@ -147,16 +186,20 @@ int editor_delete_range(Editor *ed, size_t first_1b, size_t last_1b)
     return 0;
 }
 
+//
+// Copies or moves lines p1–p2 so they appear before line p3; repeat stacks multiple copies.
+// For move, deletes the source block after computing where to insert (DOS-compatible rules).
+//
 int editor_blk_move(Editor *ed, unsigned p1, unsigned p2, unsigned p3, unsigned repeat,
                     int is_move)
 {
     if (p3 == 0)
-        return -2; /* dest required */
+        return -2; // dest required
     if (p1 == 0 || p2 == 0 || p2 < p1)
         return -1;
     if (p2 > ed->count || p1 > ed->count)
         return -1;
-    /* Destination must not lie strictly inside source line range */
+    // Destination must not lie strictly inside source line range
     if (p3 > p1 && p3 <= p2)
         return -1;
 
@@ -188,12 +231,12 @@ int editor_blk_move(Editor *ed, unsigned p1, unsigned p2, unsigned p3, unsigned 
         }
     }
 
-    /* Line to insert before (1-based), after optional delete */
+    // Line to insert before (1-based), after optional delete
     unsigned dest_ins = p3;
     if (is_move) {
         if (p3 > p2)
             dest_ins = p3 - (unsigned)nlines;
-        /* p3 <= p1 already places before source; unchanged */
+        // p3 <= p1 already places before source; unchanged
         editor_delete_range(ed, p1, p2);
     }
 
