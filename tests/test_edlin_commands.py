@@ -600,6 +600,23 @@ class TestTransferMerge(unittest.TestCase):
             s.send_line("1Tdoes_not_exist_12345.txt")
             s.expect_message_then_prompt("Invalid drive or file name")
 
+    def test_merge_path_excludes_line_ending_single_char_file(self):
+        """Interactive `1tb` must open file `b`, not `b` + newline (would fopen fail)."""
+        with tempfile.TemporaryDirectory(prefix="tmp_edlin_", dir=str(REPO_ROOT)) as td:
+            wd = Path(td)
+            (wd / "a").write_text("only_in_a\n", encoding="ascii")
+            (wd / "b").write_text("from_b\n", encoding="ascii")
+            r = run_edlin_script(
+                wd,
+                str(wd / "a"),
+                b"1tb\n1,2L\nq\ny\n",
+            )
+            self.assertEqual(r.returncode, 0, msg=r.stdout.decode(errors="replace"))
+            out = r.stdout.decode(errors="replace")
+            self.assertIn("from_b", out)
+            self.assertIn("only_in_a", out)
+            self.assertLess(out.index("from_b"), out.index("only_in_a"))
+
 
 class TestAppendWriteEndQuit(unittest.TestCase):
     def test_append_eof_message(self):

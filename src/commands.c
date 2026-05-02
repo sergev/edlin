@@ -493,7 +493,8 @@ void cmd_dispatch(Editor *ed, const Cmd *cmd, char **rest_after_cmd)
         char path[256];
         skip_ws(&rest);
         size_t i = 0;
-        while (*rest && *rest != ';' && *rest != ' ' && *rest != '\t' && i + 1 < sizeof path)
+        while (*rest && *rest != ';' && *rest != ' ' && *rest != '\t' && *rest != '\r' &&
+               *rest != '\n' && (unsigned char)*rest != 0x1a && i + 1 < sizeof path)
             path[i++] = *rest++;
         path[i] = '\0';
         if (i == 0) {
