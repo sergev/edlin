@@ -19,11 +19,11 @@ Optional merge integration (`tests/test_edlin_commands.py`): set `EDLIN_TEST_MER
 
 Environment:
 
-- `EDLIN_ROWS` — logical screen length for **L** / **P** (default `25`).
+- `EDLIN_LINES` — optional override for logical screen height used by **L** / **P**. If unset, the height comes from **`ioctl(TIOCGWINSZ)`** on standard output, or **25** if that is unavailable or returns no rows.
 
 ### C port notes
 
-- Uses **only** the C standard library (`stdio`, `stdlib`, `string`, `ctype`, `errno`).
+- Uses the C standard library plus **`ioctl(TIOCGWINSZ)`** (`sys/ioctl`, `unistd`) for terminal height when **`EDLIN_LINES`** is not set.
 - Command letters and numeric arguments follow the original **`COMTAB`** / **`GETNUM`** behavior (see [`AGENT.md`](AGENT.md)); details differ where DOS calls cannot be reproduced (PSP, IOCTL screen probe, SYSMSG, INT 23h, extended attributes).
 - **Search / Replace**: patterns use `old;text` after **`R`** / **`S`** (semicolon separator); `^V` quoting is accepted as `0x16` in input lines.
 - Comma-separated command forms, **`?`** placement, and default-range edge cases for **`S`** / **`R`** (and related parse traps) are documented in [`Manual.md`](Manual.md) § **Parsing pitfalls (comma-separated forms)**.

@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
 
 #include "commands.h"
 #include "edlin.h"
@@ -23,6 +25,17 @@ static unsigned env_u(const char *name, unsigned def)
     while (*s >= '0' && *s <= '9')
         v = v * 10u + (unsigned)(*s++ - '0');
     return v ? v : def;
+}
+
+/* Terminal height for L/P when EDLIN_LINES is unset; fallback 25 if not a tty or ioctl fails. */
+static unsigned tty_rows(void)
+{
+    struct winsize ws;
+    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) != 0)
+        return 25u;
+    if (ws.ws_row <= 0)
+        return 25u;
+    return (unsigned)ws.ws_row;
 }
 
 static void run_input_line(Editor *ed, char *line)
@@ -70,7 +83,7 @@ int main(int argc, char **argv)
 
     Editor ed;
     editor_init(&ed);
-    ed.disp_rows = env_u("EDLIN_ROWS", 25);
+    ed.disp_rows = env_u("EDLIN_LINES", tty_rows());
 
     if (fileio_startup(&ed, path, binary) != 0) {
         editor_free(&ed);

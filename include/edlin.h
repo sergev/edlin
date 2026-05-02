@@ -31,7 +31,7 @@ typedef struct Editor {
 
     int delflg; /* first write deletes .bak */
 
-    /* Display / pager (defaults match typical 80x25) */
+    /* Display / pager (from TIOCGWINSZ / EDLIN_LINES; see main.c) */
     unsigned disp_rows;
 
     int qflg; /* query replace */

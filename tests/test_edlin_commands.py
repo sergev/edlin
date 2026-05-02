@@ -407,7 +407,7 @@ class TestListPage(unittest.TestCase):
             p = wd / "f.txt"
             lines = "\n".join(f"line{i}" for i in range(1, 15))
             p.write_text(lines + "\n", encoding="ascii")
-            env = {"EDLIN_ROWS": "6"}
+            env = {"EDLIN_LINES": "6"}
             s = EdlinSession(wd, env=env)
             s.spawn([str(EDLIN_BIN), str(p)], self)
             s.expect_prompt()

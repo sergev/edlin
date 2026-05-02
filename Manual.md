@@ -33,7 +33,7 @@ Implementation: [`parse_invocation`](src/parser.c), [`fileio_startup`](src/filei
 
 **Environment variables:**
 
-- **`EDLIN_ROWS`**: Positive integer; sets the logical screen height used by **`L`** and **`P`** (default **25**). See [`main.c`](src/main.c).
+- **`EDLIN_LINES`**: Optional positive integer; overrides the logical screen height used by **`L`** and **`P`**. If unset, the height is read from **`ioctl(TIOCGWINSZ)`** on standard output, or **25** if that fails or reports no rows. See [`main.c`](src/main.c).
 
 If the file does not exist, the editor prints **New file** and starts an empty buffer.
 
@@ -186,7 +186,7 @@ Implementation: [`cmd_dispatch`](src/commands.c) — empty case.
 **Defaults:**
 
 - **`param1`**: If **0**, start = **`max(1, current − 11)`**.
-- **`param2`**: If **0**, end = **`start + (EDLIN_ROWS − 2)`** (from **`disp_rows − 2`**), capped at the last line.
+- **`param2`**: If **0**, end = **`start + (disp_rows − 2)`**, capped at the last line.
 
 **Behavior:** If the buffer has **no lines**, **`L`** does nothing (no message).
 
@@ -439,7 +439,7 @@ Unused in code paths today but defined: **Cannot merge - Code page mismatch**, *
 
 ## Portability and differences from MS-DOS EDLIN
 
-- **No DOS interrupts**: Screen size comes from **`EDLIN_ROWS`** instead of BIOS/IOCTL.
+- **No DOS interrupts**: Screen height defaults from **`TIOCGWINSZ`** on stdout; optional override **`EDLIN_LINES`** (see [`main.c`](src/main.c)).
 - **Line storage**: Internal **array of lines**, not a single segment buffer with **`^Z`** between lines (behavior is aligned logically).
 - **`W`** without an argument: classic code used a **byte-quarters** heuristic; this port uses **line-count quarters**.
 - **`A`**: Classic append could stop after **N** lines and seek the input file; this port reads **all** remaining bytes once.

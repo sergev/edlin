@@ -39,10 +39,10 @@ In normal **text** mode, a Ctrl-Z (`^Z`, byte `0x1A`) in the file marks **end-of
 ./edlin /B data.bin
 ```
 
-Environment variable **`EDLIN_ROWS`** controls how many lines **L** (list) and **P** (page) show in one “window” (default 25). Example for narrow paging:
+By default, **L** and **P** use your terminal height from **`ioctl(TIOCGWINSZ)`** (with a fallback of **25** rows). Set **`EDLIN_LINES`** to override that window size. Example for narrow paging:
 
 ```bash
-EDLIN_ROWS=6 ./edlin long.txt
+EDLIN_LINES=6 ./edlin long.txt
 ```
 
 ---
@@ -306,7 +306,7 @@ If the path cannot be opened, you may see **Invalid drive or file name**. Mergin
 Continue (Y/N)?
 ```
 
-Answer **`y`** to continue or **`n`** to stop. Set **`EDLIN_ROWS`** to a small number to see paging sooner on long files.
+Answer **`y`** to continue or **`n`** to stop. Set **`EDLIN_LINES`** to a small number to see paging sooner on long files.
 
 ---
 
