@@ -1,54 +1,78 @@
-# EDLIN — MS-DOS line editor source
+# EDLIN — portable C11 line editor
 
-**EDLIN** is the classic line-oriented text editor shipped with MS-DOS: a prompt (`*`), line numbers, and single-letter commands (**L**ist, **I**nsert, **D**elete, **W**rite, etc.). This repository holds the historical **8086 assembly** EDLIN sources plus a portable **C11** reimplementation.
+**EDLIN** is a small line-oriented editor inspired by the classic DOS editor: a `*` prompt, numbered lines, one current line, and single-letter commands such as **L**ist, **I**nsert, **D**elete, **W**rite, **E**nd, and **Q**uit.
 
-## Portable C11 editor (`./edlin`)
+This repository contains a modern portable C11 implementation that builds on macOS and Linux.
 
-Build and run on macOS/Linux (needs a C compiler):
+The original ASM source files included for reference come from the official MS-DOS source releases [published by Microsoft](https://github.com/microsoft/MS-DOS).
+
+## Build and Run
+
+Requirements:
+
+- A C11 compiler
+- `make`
+- Python 3 plus `pexpect` for the integration tests
+
+Build the editor:
 
 ```bash
 make
-./edlin myfile.txt
-./edlin /B binary.bin    # optional: binary mode (no Ctrl-Z cut on load)
-make test                  # parser unit test + Python integration tests (`pexpect`)
-pip install -r requirements-dev.txt   # once: integration suite needs `pexpect`
-./tests/smoke.sh           # minimal stdin script (build `edlin` first)
 ```
 
-Environment:
+Run it on a text file:
 
-- `EDLIN_LINES` — optional override for logical screen height used by **L** / **P**. If unset, the height comes from **`ioctl(TIOCGWINSZ)`** on standard output, or **25** if that is unavailable or returns no rows.
+```bash
+./edlin myfile.txt
+```
 
-### C port notes
+If the file does not exist, EDLIN prints `New file` and starts with an empty buffer.
 
-- Uses the C standard library plus **`ioctl(TIOCGWINSZ)`** (`sys/ioctl`, `unistd`) for terminal height when **`EDLIN_LINES`** is not set.
-- Command letters and numeric arguments follow the original **`COMTAB`** / **`GETNUM`** behavior (see [`AGENT.md`](AGENT.md)); details differ where DOS calls cannot be reproduced (PSP, IOCTL screen probe, SYSMSG, INT 23h, extended attributes).
-- **Search / Replace**: patterns use `old;text` after **`R`** / **`S`** (semicolon separator); `^V` quoting is accepted as `0x16` in input lines.
-- Comma-separated command forms, **`?`** placement, and default-range edge cases for **`S`** / **`R`** (and related parse traps) are documented in [`Manual.md`](Manual.md) § **Parsing pitfalls (comma-separated forms)**.
-- **Save**: writes a scratch file (`filename.$$$`), then renames like the DOS utility (original → `.bak`, scratch → original).
-- Historical **`makefile.dos`** builds the original `.com`; the root **`Makefile`** builds the C binary only.
+Use binary mode when Ctrl-Z bytes should be treated as normal data:
 
-## Historical assembly layout
+```bash
+./edlin /B binary.bin
+```
 
-| Path | Purpose |
-|------|---------|
-| `edlin.asm` | Entry point, command loop, line-argument parsing (`GETNUM`), dispatch table, move/copy |
-| `edlcmd1.asm`, `edlcmd2.asm` | Command implementation and helpers (append, delete, list, page, write, …) |
-| `edlparse.asm` | External command line: required filespec, optional `/B` |
-| `edlmes.asm` | Message retriever / printf bridge |
-| `edlequ.asm`, `edlstdsw.inc` | Equates and build switches |
-| `edlin.skl` | Message skeleton for building localized message tables |
-| `makefile.dos`, `edlin.lnk` | Original DOS link order: `EDLIN+EDLCMD1+EDLCMD2+EDLMES+EDLPARSE` → `edlin.com` |
-| `AGENT.md` | Structured summary for tools and contributors (commands, buffers, build caveats) |
+## Basic Usage
 
-### Building the original DOS binary
+At the `*` prompt, type commands and press Enter:
 
-The **`makefile.dos`** recipe expects a **full MS-DOS build tree** (parent `inc`, `messages`, assembler, linker, `convert` to `.COM`, etc.). **This checkout does not include that tree**; treat the `.asm` files as the behavioral reference.
+- `I` inserts lines; end insert mode with `.` on a line by itself.
+- `L` lists lines.
+- `D` deletes lines.
+- `Stext` searches for `text`.
+- `Rold;new` replaces text.
+- `Tfile` merges another file.
+- `E` saves and exits.
+- `Q` quits without saving after confirmation.
+- `H` prints in-session help.
+
+Many commands accept line numbers before the command letter, such as `1,3L` to list lines 1 through 3 or `#I` to insert after the last line. See [`Tutorial.md`](Tutorial.md) for a guided introduction and [`Manual.md`](Manual.md) for the full command reference.
+
+## Testing
+
+Install test dependencies once:
+
+```bash
+pip install -r requirements-dev.txt
+```
+
+Run the full test suite:
+
+```bash
+make test
+```
+
+## Project Layout
+
+- `src/` — C source files and headers.
+- `tests/test_parser.c` — parser unit test.
+- `tests/test_edlin_commands.py` — integration tests that drive `./edlin`.
+- `Manual.md` — full command reference.
+- `Tutorial.md` — beginner walkthrough.
+- `AGENT.md` — concise implementation notes for coding agents and contributors.
 
 ## License
 
-See [`LICENSE`](LICENSE) — MIT License, copyright IBM and Microsoft Corporation.
-
-## History
-
-These files come from the same MS-DOS source releases [published by Microsoft](https://github.com/microsoft/MS-DOS) (early DOS versions were also [archived at the Computer History Museum](http://www.computerhistory.org/atchm/microsoft-ms-dos-early-source-code/)). They are preserved here for study, porting, and accurate documentation of **EDLIN** behavior—not as a drop-in build of the entire operating system.
+See [`LICENSE`](LICENSE).
