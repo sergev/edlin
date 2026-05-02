@@ -410,7 +410,7 @@ Implementation: [`cmd_dispatch`](src/commands.c), [`editor_blk_move`](src/editor
 
 **Rest:** First path token after **`T`** (see above).
 
-**Errors:** **Entry error** if **`nparam != 1`** or path empty. Open/read/merge failures print **Invalid drive or file name** or **Not enough room to merge the entire file**. **`Invalid drive or file name`** also covers **`fopen`** failing on the merge path — for example in **restricted or sandboxed** environments where the path looks valid but file access is blocked (optional integration coverage: set **`EDLIN_TEST_MERGE_IO=1`** per [`README.md`](README.md)).
+**Errors:** **Entry error** if **`nparam != 1`** or path empty. Open/read/merge failures print **Invalid drive or file name** or **Not enough room to merge the entire file**.
 
 Implementation: [`cmd_dispatch`](src/commands.c), [`fileio_merge`](src/fileio.c).
 
@@ -460,7 +460,6 @@ Unused in code paths today but defined: **Cannot merge - Code page mismatch**, *
 - **`R` / `S` rest**: Classic **`GETTEXT`** used CR-terminated fields on one logical command line; this port documents **`;`** between **`old`** and **`new`** for **`R`**, and substring search via **`strstr`** (not DOS/Japanese-specific boundary rules).
 - **Move/Copy defaults**: MS-DOS EDLIN defaults missing line numbers to **current** in **`BLKMOVE`**; this implementation **requires explicit numeric parameters** matching the **`nparam`** gates (zeros are not rewritten to **current** before [`editor_blk_move`](src/editor.c)).
 - **Binary mode**: Matches the intent of **`/B`** (Ctrl-Z not EOF); exact DOS binary semantics may still differ on exotic encodings.
-- **`T` / merge I/O**: **`fopen`** on the merge path may fail under sandbox or policy restrictions; see **`Invalid drive or file name`** above and optional **`EDLIN_TEST_MERGE_IO`** in [`README.md`](README.md).
 
 ---
 

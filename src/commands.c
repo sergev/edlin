@@ -235,9 +235,7 @@ static void cmd_nocom(Editor *ed, const Cmd *cmd)
     if (n <= ed->count) {
         const char *cur = editor_line_get(ed, n);
         char buf[300];
-        if (cur) {
-            msg_line_out(cur, n, 1);
-        }
+        msg_line_out(cur, n, 1);
         msg_line_prompt(n);
         if (read_line_stdin(buf, sizeof buf) != 0)
             return;

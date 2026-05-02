@@ -299,7 +299,7 @@ Example (conceptual):
 
 That merges **other.txt** before what was line **1** (line numbers shift after the insert).
 
-If the path cannot be opened, you may see **Invalid drive or file name**. Merging needs real file access; in some environments merge tests are optional (see **README** and **`EDLIN_TEST_MERGE_IO`**).
+If the path cannot be opened, you may see **Invalid drive or file name**. Merging needs real file access.
 
 ---
 

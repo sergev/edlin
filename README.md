@@ -13,8 +13,6 @@ make
 make test                  # parser unit test + Python integration tests (`pexpect`)
 pip install -r requirements-dev.txt   # once: integration suite needs `pexpect`
 ./tests/smoke.sh           # minimal stdin script (build `edlin` first)
-
-Optional merge integration (`tests/test_edlin_commands.py`): set `EDLIN_TEST_MERGE_IO=1` if `fopen` on merge paths should be exercised (some sandboxed environments block this).
 ```
 
 Environment:

@@ -593,10 +593,8 @@ class TestCopyMove(unittest.TestCase):
 
 
 class TestTransferMerge(unittest.TestCase):
-    def test_merge_success_optional(self):
-        """Merge reads a second path via fopen — enable only where unrestricted FS allows it."""
-        if os.environ.get("EDLIN_TEST_MERGE_IO") != "1":
-            self.skipTest("set EDLIN_TEST_MERGE_IO=1 to enable merge integration (requires fopen on merge path)")
+    def test_merge_success(self):
+        """Merge reads a second path via fopen."""
         with tempfile.TemporaryDirectory(prefix="tmp_edlin_", dir=str(REPO_ROOT)) as td:
             wd = Path(td)
             main = wd / "main.txt"
