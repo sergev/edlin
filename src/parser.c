@@ -1,9 +1,10 @@
+#include "parser.h"
+
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "edlin.h"
-#include "parser.h"
 
 //
 // Returns 1 if s starts with the ASCII prefix pfx, ignoring letter case for letters.
@@ -27,7 +28,7 @@ int parse_invocation(int argc, char **argv, char **out_path, int *out_binary)
 {
     if (!out_path || !out_binary)
         return -1;
-    *out_path = NULL;
+    *out_path   = NULL;
     *out_binary = 0;
 
     char *path = NULL;
@@ -118,11 +119,11 @@ static int get_num(Editor *ed, char **p, unsigned *out, int fourth)
     (void)fourth;
     skip_ws(p);
     unsigned dx = 0;
-    int saw = 0;
+    int saw     = 0;
     while (**p >= '0' && **p <= '9') {
         if (dx > 6553u)
             return -1;
-        dx = dx * 10u + (unsigned)(**p - '0');
+        dx  = dx * 10u + (unsigned)(**p - '0');
         saw = 1;
         (*p)++;
     }
@@ -141,8 +142,8 @@ static int get_num(Editor *ed, char **p, unsigned *out, int fourth)
 //
 static int dispatch_index(char cmd)
 {
-    static const char tab[] = {'\r', ';', 'A', 'C', 'D', 'E', 'H', 'I', 'L',
-                               'M', 'P', 'Q', 'R', 'S', 'T', 'W'};
+    static const char tab[] = { '\r', ';', 'A', 'C', 'D', 'E', 'H', 'I',
+                                'L',  'M', 'P', 'Q', 'R', 'S', 'T', 'W' };
     for (size_t i = 0; i < sizeof tab / sizeof tab[0]; ++i) {
         if (tab[i] == cmd)
             return (int)i;
@@ -168,7 +169,7 @@ ParseResult parse_command(Editor *ed, char **ptr_inout, Cmd *cmd)
 
     for (;;) {
         int fourth_flag = (cmd->nparam == 3);
-        unsigned dx = 0;
+        unsigned dx     = 0;
         if (get_lineref(ed, &s, &dx, fourth_flag) != 0)
             return PARSE_ERR;
         cmd->param[cmd->nparam++] = dx;
@@ -192,7 +193,7 @@ ParseResult parse_command(Editor *ed, char **ptr_inout, Cmd *cmd)
 
     // CR / newline -> blank-line edit
     if (*s == '\0' || *s == '\n' || *s == '\r') {
-        cmd->code = '\r';
+        cmd->code  = '\r';
         *ptr_inout = s;
         if (cmd->param[1] != 0 && cmd->param[1] < cmd->param[0])
             return PARSE_ERR;

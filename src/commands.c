@@ -1,9 +1,10 @@
+#include "commands.h"
+
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "commands.h"
 #include "fileio.h"
 #include "messages.h"
 
@@ -23,7 +24,7 @@ static void skip_ws(char **p)
 static int gettext_field(char **pp, char *buf, size_t bufsz)
 {
     size_t n = 0;
-    char *s = *pp;
+    char *s  = *pp;
     while (*s && *s != '\r' && *s != '\n') {
         if (*s == ';')
             break;
@@ -39,7 +40,7 @@ static int gettext_field(char **pp, char *buf, size_t bufsz)
         buf[n++] = *s++;
     }
     buf[n] = '\0';
-    *pp = s;
+    *pp    = s;
     return 0;
 }
 
@@ -80,7 +81,7 @@ static int prompt_yn(void)
 static void cmd_list(Editor *ed, const Cmd *cmd)
 {
     unsigned start = cmd->param[0];
-    unsigned endp = cmd->param[1];
+    unsigned endp  = cmd->param[1];
     if (ed->count == 0)
         return;
     if (start == 0) {
@@ -91,7 +92,7 @@ static void cmd_list(Editor *ed, const Cmd *cmd)
     }
     if (endp == 0) {
         unsigned window = ed->disp_rows > 2 ? ed->disp_rows - 2u : 1u;
-        endp = start + window - 1;
+        endp            = start + window - 1;
     }
     if (endp < start) {
         msg_entry_error();
@@ -117,7 +118,7 @@ static void cmd_list(Editor *ed, const Cmd *cmd)
 //
 static void cmd_pager(Editor *ed, const Cmd *cmd)
 {
-    unsigned last = ed->count ? (unsigned)ed->count : 1u;
+    unsigned last  = ed->count ? (unsigned)ed->count : 1u;
     unsigned start = cmd->param[0];
     if (start == 0) {
         start = (unsigned)ed->current;
@@ -129,7 +130,7 @@ static void cmd_pager(Editor *ed, const Cmd *cmd)
     unsigned endp = cmd->param[1];
     if (endp == 0) {
         unsigned w = ed->disp_rows > 2 ? ed->disp_rows - 2u : 1u;
-        endp = start + w;
+        endp       = start + w;
     }
     ++endp;
     if (endp > last + 1)
@@ -138,7 +139,7 @@ static void cmd_pager(Editor *ed, const Cmd *cmd)
         msg_entry_error();
         return;
     }
-    unsigned pg = ed->disp_rows > 1 ? ed->disp_rows - 1u : 1u;
+    unsigned pg    = ed->disp_rows > 1 ? ed->disp_rows - 1u : 1u;
     unsigned shown = 0;
     for (unsigned L = start; L < endp; ++L) {
         const char *ln = editor_line_get(ed, L);
@@ -275,7 +276,7 @@ static void cmd_search(Editor *ed, const Cmd *cmd, char **rio, int from_current)
         msg_entry_error();
         return;
     }
-    *rio = r;
+    *rio          = r;
     size_t oldlen = strlen(oldp);
     if (oldlen == 0) {
         msg_entry_error();
@@ -283,7 +284,7 @@ static void cmd_search(Editor *ed, const Cmd *cmd, char **rio, int from_current)
     }
 
     unsigned start_line = cmd->param[0];
-    unsigned end_line = cmd->param[1];
+    unsigned end_line   = cmd->param[1];
     if (start_line == 0) {
         if (from_current)
             start_line = (unsigned)ed->current + 1u;
@@ -337,7 +338,7 @@ static void cmd_replace(Editor *ed, const Cmd *cmd, char **rio, int from_current
         msg_entry_error();
         return;
     }
-    *rio = r;
+    *rio          = r;
     size_t oldlen = strlen(oldp);
     size_t newlen = strlen(newp);
     if (oldlen == 0) {
@@ -345,7 +346,7 @@ static void cmd_replace(Editor *ed, const Cmd *cmd, char **rio, int from_current
         return;
     }
     unsigned start_line = cmd->param[0];
-    unsigned end_line = cmd->param[1];
+    unsigned end_line   = cmd->param[1];
     if (start_line == 0) {
         if (from_current)
             start_line = (unsigned)ed->current + 1u;
@@ -362,7 +363,7 @@ static void cmd_replace(Editor *ed, const Cmd *cmd, char **rio, int from_current
         char *hit = strstr(ln, oldp);
         if (!hit)
             continue;
-        size_t prefix = (size_t)(hit - ln);
+        size_t prefix     = (size_t)(hit - ln);
         size_t suffix_len = strlen(hit + oldlen);
         if (prefix + newlen + suffix_len > EDLIN_MAX_LINE) {
             msg_toolong();

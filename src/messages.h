@@ -1,6 +1,8 @@
 #ifndef MESSAGES_H
 #define MESSAGES_H
 
+#include <stddef.h>
+
 // Prints the main “*” prompt with no newline (user types on the same line).
 void msg_prompt(void);
 

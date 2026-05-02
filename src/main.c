@@ -61,7 +61,7 @@ static void run_input_line(Editor *ed, char *line)
             break;
 
         Cmd cmd;
-        char *save = p;
+        char *save    = p;
         ParseResult r = parse_command(ed, &p, &cmd);
         if (r == PARSE_LINE_DONE)
             break;

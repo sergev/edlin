@@ -8,7 +8,7 @@
 
 // Maximum length for a line when replacing text (matches original behavior).
 #define EDLIN_MAX_LINE 253
-#define EDLIN_COMBUF 512
+#define EDLIN_COMBUF   512
 
 typedef struct Editor {
     char **lines; // owned; logical lines without trailing CR/LF
@@ -73,7 +73,8 @@ int editor_replace_line(Editor *ed, size_t line_1b, const char *text, size_t len
 // Returns how many logical lines are in the buffer (same as last line number if non-empty).
 size_t editor_last_line(const Editor *ed);
 
-// Copies or moves lines p1–p2 so they appear before line p3; repeat copies the block multiple times.
+// Copies or moves lines p1–p2 so they appear before line p3; repeat copies the block multiple
+// times.
 int editor_blk_move(Editor *ed, unsigned p1, unsigned p2, unsigned p3, unsigned repeat,
                     int is_move);
 

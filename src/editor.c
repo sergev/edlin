@@ -9,7 +9,7 @@
 static char *dup_line(const char *s)
 {
     size_t n = strlen(s);
-    char *p = malloc(n + 1);
+    char *p  = malloc(n + 1);
     if (!p)
         return NULL;
     memcpy(p, s, n + 1);
@@ -22,7 +22,7 @@ static char *dup_line(const char *s)
 void editor_init(Editor *ed)
 {
     memset(ed, 0, sizeof *ed);
-    ed->current = 1;
+    ed->current   = 1;
     ed->disp_rows = 25;
 }
 
@@ -65,14 +65,17 @@ int editor_resize(Editor *ed, size_t need)
     if (!nl)
         return -1;
     ed->lines = nl;
-    ed->cap = ncap;
+    ed->cap   = ncap;
     return 0;
 }
 
 //
 // Returns how many lines are in the buffer (0 means an empty file).
 //
-size_t editor_last_line(const Editor *ed) { return ed->count; }
+size_t editor_last_line(const Editor *ed)
+{
+    return ed->count;
+}
 
 //
 // Verifies that line_1b is between 1 and the line count; optionally outputs zero-based index.
@@ -174,7 +177,7 @@ int editor_delete_range(Editor *ed, size_t first_1b, size_t last_1b)
     if (first_1b < 1 || last_1b < first_1b || last_1b > ed->count)
         return -1;
     size_t i0 = first_1b - 1;
-    size_t n = last_1b - first_1b + 1;
+    size_t n  = last_1b - first_1b + 1;
     for (size_t i = 0; i < n; ++i)
         free(ed->lines[i0 + i]);
     memmove(ed->lines + i0, ed->lines + i0 + n, (ed->count - (i0 + n)) * sizeof *ed->lines);
@@ -190,8 +193,7 @@ int editor_delete_range(Editor *ed, size_t first_1b, size_t last_1b)
 // Copies or moves lines p1–p2 so they appear before line p3; repeat stacks multiple copies.
 // For move, deletes the source block after computing where to insert (DOS-compatible rules).
 //
-int editor_blk_move(Editor *ed, unsigned p1, unsigned p2, unsigned p3, unsigned repeat,
-                    int is_move)
+int editor_blk_move(Editor *ed, unsigned p1, unsigned p2, unsigned p3, unsigned repeat, int is_move)
 {
     if (p3 == 0)
         return -2; // dest required
@@ -206,7 +208,7 @@ int editor_blk_move(Editor *ed, unsigned p1, unsigned p2, unsigned p3, unsigned 
     unsigned rep = (repeat == 0 || repeat == 1) ? 1 : repeat;
 
     size_t nlines = (size_t)(p2 - p1 + 1);
-    char **block = calloc(nlines * rep, sizeof *block);
+    char **block  = calloc(nlines * rep, sizeof *block);
     if (!block)
         return -1;
 

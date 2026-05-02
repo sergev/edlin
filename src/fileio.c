@@ -1,10 +1,11 @@
+#include "fileio.h"
+
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "edlin.h"
-#include "fileio.h"
 #include "messages.h"
 
 //
@@ -34,12 +35,12 @@ static int ends_with_ci(const char *s, const char *suf)
 //
 static int build_temp_path(const char *src, char **out)
 {
-    size_t n = strlen(src);
+    size_t n  = strlen(src);
     char *buf = malloc(n + 16);
     if (!buf)
         return -1;
     memcpy(buf, src, n + 1);
-    char *dot = strrchr(buf, '.');
+    char *dot   = strrchr(buf, '.');
     char *slash = strrchr(buf, '/');
 #ifdef _WIN32
     char *bs = strrchr(buf, '\\');
@@ -59,7 +60,7 @@ static int build_temp_path(const char *src, char **out)
 //
 static int append_loaded_lines(Editor *ed, const unsigned char *buf, size_t len, int binary_mode)
 {
-    size_t i = 0;
+    size_t i          = 0;
     size_t line_start = 0;
 
     while (i < len) {
@@ -69,8 +70,8 @@ static int append_loaded_lines(Editor *ed, const unsigned char *buf, size_t len,
             size_t seglen = i - line_start;
             if (seglen > 0 && buf[line_start + seglen - 1] == '\r')
                 seglen--;
-            if (editor_insert_before(ed, ed->count + 1,
-                                     (const char *)(buf + line_start), seglen) != 0)
+            if (editor_insert_before(ed, ed->count + 1, (const char *)(buf + line_start), seglen) !=
+                0)
                 return -1;
             ++i;
             line_start = i;
@@ -83,8 +84,8 @@ static int append_loaded_lines(Editor *ed, const unsigned char *buf, size_t len,
         if (!binary_mode && seglen > 0 && buf[line_start + seglen - 1] == 0x1a)
             seglen--;
         if (seglen > 0) {
-            if (editor_insert_before(ed, ed->count + 1, (const char *)(buf + line_start),
-                                     seglen) != 0)
+            if (editor_insert_before(ed, ed->count + 1, (const char *)(buf + line_start), seglen) !=
+                0)
                 return -1;
         }
     }
@@ -98,7 +99,7 @@ static int append_loaded_lines(Editor *ed, const unsigned char *buf, size_t len,
 int fileio_startup(Editor *ed, const char *path, int binary_mode)
 {
     ed->binary_mode = binary_mode;
-    ed->path = strdup(path);
+    ed->path        = strdup(path);
     if (!ed->path)
         return -1;
 
@@ -328,7 +329,7 @@ int fileio_end(Editor *ed)
     if (!bak)
         return -1;
     strcpy(bak, ed->path);
-    char *dot = strrchr(bak, '.');
+    char *dot   = strrchr(bak, '.');
     char *slash = strrchr(bak, '/');
 #ifdef _WIN32
     char *bs = strrchr(bak, '\\');
