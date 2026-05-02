@@ -170,6 +170,9 @@ static void cmd_insert(Editor *ed, const Cmd *cmd)
             break;
         if (line[0] == '\x1a')
             break;
+        /* Single dot ends insert (modern alternative to Ctrl-Z); ^V. inserts a literal dot */
+        if (strcmp(line, ".") == 0)
+            break;
         /* unquote ^V */
         char out[300];
         size_t o = 0;

@@ -306,6 +306,17 @@ class TestInsertDeleteBlank(unittest.TestCase):
             self.assertEqual(r.returncode, 0)
             self.assertIn(b"first", r.stdout)
 
+    def test_insert_dot_exit(self):
+        with tempfile.TemporaryDirectory() as td:
+            wd = Path(td)
+            p = wd / "f.txt"
+            # Save with E so we assert '.' did not become a second buffer line (prompts contain `     2:`).
+            r = run_edlin_script(wd, str(p), b"1I\nfirst\n.\nE\n")
+            self.assertEqual(r.returncode, 0)
+            raw = p.read_bytes().rstrip(b"\x1a")
+            lines = [ln for ln in raw.split(b"\n") if ln != b""]
+            self.assertEqual(lines, [b"first"])
+
     def test_insert_before_current_default(self):
         with tempfile.TemporaryDirectory() as td:
             wd = Path(td)

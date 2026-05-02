@@ -77,7 +77,7 @@ New file
 
 At **`*`**, type **`1I`** and press **Enter**. EDLIN enters **insert mode**: it shows numbered prompts and reads lines from you.
 
-Type each line of text, then **Enter**. When you are done inserting, press **Ctrl-Z** then **Enter** on a line by itself (that ends insert mode).
+Type each line of text, then **Enter**. When you are done inserting, type **`.`** then **Enter** on a line by itself (that ends insert mode). **Ctrl-Z** on a line by itself still works for compatibility with classic EDLIN (`^Z` means hold **Ctrl** and press **Z**).
 
 Example session (what you type is after **`*`** or after the insert prompt):
 
@@ -85,11 +85,9 @@ Example session (what you type is after **`*`** or after the insert prompt):
 *1I
      1:*First line of my notes
      2:*Second line
-^Z
+.
 *
 ```
-
-(`^Z` means hold **Ctrl** and press **Z**.)
 
 **Step 3 — List the buffer**
 
@@ -159,7 +157,7 @@ Then **`L`** to verify.
 ```text
 *2I
      2:*(new text goes here)
-^Z
+.
 *
 ```
 
@@ -348,12 +346,12 @@ Answer **`y`** to abandon (scratch file removed). Answer **`n`** to stay in the 
 
 ## Automation tip — piping commands
 
-For scripts, **Ctrl-Z** as the **first character of a line** during **`I`** ends insert mode reliably (same idea as the integration tests). Example bytes: insert two lines, end insert, list, quit yes:
+For scripts, a line containing only **`.`** during **`I`** ends insert mode portably (recommended). **Ctrl-Z** as the **first character of a line** still works. Example: insert one line, end insert, list, quit yes:
 
 ```text
 1I
 hello
-^Z
+.
 L
 Q
 y
@@ -379,7 +377,7 @@ y
 | Command | Meaning |
 |---------|---------|
 | *(number only)* | Edit that line (blank-line edit) |
-| **`I`** | Insert lines before a line; end with **Ctrl-Z** |
+| **`I`** | Insert lines before a line; end with **`.`** (or **Ctrl-Z** for classic behavior) |
 | **`L`** | List lines (optional range) |
 | **`D`** | Delete line(s) |
 | **`S`**text | Search for substring |

@@ -244,7 +244,7 @@ Implementation: [`cmd_delete`](src/commands.c).
 
 - **`param1`**: If **0**, insert **before** the **current** line.
 
-**Behavior:** Repeatedly prints an insert prompt (same **`number`:`marker`** prefix as [`msg_line_out`](src/messages.c), **without** a newline after the prompt), reads stdin until **Ctrl-Z** on a line or EOF. **`^V`** quoting applies; long lines yield **Line too long**.
+**Behavior:** Repeatedly prints an insert prompt (same **`number`:`marker`** prefix as [`msg_line_out`](src/messages.c), **without** a newline after the prompt), reads stdin until end of insert: a line containing only **`.`**, or **Ctrl-Z** as the first byte of a line (classic MS-DOS), or EOF. **`^V`** quoting applies; long lines yield **Line too long**. To insert a line that is exactly **`.`**, use **`^V.`** so the terminator check does not apply.
 
 **Errors:** **Entry error** if more than one numeric parameter.
 
@@ -452,7 +452,7 @@ Unused in code paths today but defined: **Cannot merge - Code page mismatch**, *
 
 ## Automation / scripting
 
-With **piped stdin** (non-TTY), **`I`** treats **Ctrl-Z** (**`^Z`**) as documented when it is the **first byte of a line** — that matches **`subprocess`**-style automation. **Interactive PTY** stacks can differ in how **EOF** and **line discipline** interact with **`^Z`**; the integration suite uses **pipe-style** **`subprocess`** for reliable **`^Z`** behavior ([`tests/test_edlin_commands.py`](tests/test_edlin_commands.py)).
+With **piped stdin** (non-TTY), a line containing only **`.`** ends insert mode portably. **`Ctrl-Z`** (**`^Z`**) as the **first byte of a line** still works for compatibility and matches **`subprocess`**-style automation. **Interactive PTY** stacks can differ in how **EOF** and **line discipline** interact with **`^Z`**; prefer **`.`** in scripts when **`^Z`** is awkward ([`tests/test_edlin_commands.py`](tests/test_edlin_commands.py)).
 
 ---
 
