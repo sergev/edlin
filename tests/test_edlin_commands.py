@@ -222,6 +222,40 @@ class TestParserChains(unittest.TestCase):
             s.send_line("l")
             s.expect_prompt()
 
+    def test_help_command(self):
+        with tempfile.TemporaryDirectory() as td:
+            wd = Path(td)
+            p = wd / "f.txt"
+            s = EdlinSession(wd)
+            s.spawn([str(EDLIN_BIN), str(p)], self)
+            s.expect_new_file_then_prompt()
+            s.send_line("H")
+            s.expect_prompt()
+            out = s.child.before
+            self.assertIn("Commands:", out)
+            self.assertIn("Print this help", out)
+
+    def test_help_lowercase(self):
+        with tempfile.TemporaryDirectory() as td:
+            wd = Path(td)
+            p = wd / "f.txt"
+            s = EdlinSession(wd)
+            s.spawn([str(EDLIN_BIN), str(p)], self)
+            s.expect_new_file_then_prompt()
+            s.send_line("h")
+            s.expect_prompt()
+            self.assertIn("Commands:", s.child.before)
+
+    def test_help_numeric_prefix_entry_error(self):
+        with tempfile.TemporaryDirectory() as td:
+            wd = Path(td)
+            p = wd / "f.txt"
+            s = EdlinSession(wd)
+            s.spawn([str(EDLIN_BIN), str(p)], self)
+            s.expect_new_file_then_prompt()
+            s.send_line("1H")
+            s.expect_entry_error_prompt()
+
     def test_invalid_command_entry_error(self):
         with tempfile.TemporaryDirectory() as td:
             wd = Path(td)

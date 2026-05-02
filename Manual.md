@@ -71,7 +71,7 @@ Example: **`1?Sfoo`**. Do **not** use **`?Sfoo`** at the start of the line — w
 
 ### Command letter
 
-Letters are **case-insensitive**. Valid commands are the letters in **`COMTAB`** / [`dispatch_index`](src/parser.c): **`A C D E I L M P Q R S T W`**, plus two special forms:
+Letters are **case-insensitive**. Valid commands are the letters in **`COMTAB`** / [`dispatch_index`](src/parser.c): **`A C D E H I L M P Q R S T W`**, plus two special forms:
 
 - **End of line or nothing left** before a letter → **blank-line edit** (same slot as carriage return in the original **`COMTAB`**).
 - **`;` alone** as the command → **no-op** (remark).
@@ -174,6 +174,20 @@ Implementation: [`cmd_nocom`](src/commands.c).
 **Parameters:** None required.
 
 Implementation: [`cmd_dispatch`](src/commands.c) — empty case.
+
+---
+
+### **`H`** — Help
+
+**Purpose:** Print a short summary of available commands (similar to the cheat sheet in [Tutorial.md](Tutorial.md)).
+
+**Parameters:** **Exactly one**, value **`0`** (use **`H`** alone — same parsed form as **`E`** / **`Q`** before the letter).
+
+**Behavior:** Prints fixed help text to standard output ([`msg_help`](src/messages.c)).
+
+**Errors:** **Entry error** if a line number or other prefix appears before **`H`** (e.g. **`1H`**).
+
+Implementation: [`cmd_dispatch`](src/commands.c).
 
 ---
 

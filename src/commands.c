@@ -402,6 +402,12 @@ void cmd_dispatch(Editor *ed, const Cmd *cmd, char **rest_after_cmd)
         else
             fileio_end(ed);
         break;
+    case 'H':
+        if (cmd->nparam != 1 || cmd->param[0] != 0)
+            msg_entry_error();
+        else
+            msg_help();
+        break;
     case 'I':
         if (cmd->nparam > 1)
             msg_entry_error();

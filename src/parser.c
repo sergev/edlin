@@ -120,7 +120,7 @@ static int get_num(Editor *ed, char **p, unsigned *out, int fourth)
 
 static int dispatch_index(char cmd)
 {
-    static const char tab[] = {'\r', ';', 'A', 'C', 'D', 'E', 'I', 'L',
+    static const char tab[] = {'\r', ';', 'A', 'C', 'D', 'E', 'H', 'I', 'L',
                                'M', 'P', 'Q', 'R', 'S', 'T', 'W'};
     for (size_t i = 0; i < sizeof tab; ++i) {
         if (tab[i] == cmd)

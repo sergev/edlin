@@ -47,6 +47,31 @@ void msg_mem_full(void) { fputs("Insufficient memory\n", stdout); }
 
 void msg_toolong(void) { fputs("Line too long\n", stdout); }
 
+void msg_help(void)
+{
+    static const char *const lines[] = {
+        "Commands:\n",
+        "  (number only)  Edit that line (blank-line edit)\n",
+        "  I              Insert lines before a line; end with . or Ctrl-Z\n",
+        "  L              List lines (optional range)\n",
+        "  D              Delete line(s)\n",
+        "  Stext          Search for substring\n",
+        "  R              Replace first occurrence (Rold;new)\n",
+        "  C              Copy block\n",
+        "  M              Move block\n",
+        "  T              Merge file\n",
+        "  P              Page / list with prompts\n",
+        "  W              Write beginning to disk / shrink buffer\n",
+        "  A              Append rest of original disk file (needs one number, e.g. 1A)\n",
+        "  E              End: save and exit\n",
+        "  Q              Quit without saving (confirms)\n",
+        "  ;              No-op; also separates commands on one line\n",
+        "  H              Print this help\n",
+    };
+    for (size_t i = 0; i < sizeof lines / sizeof lines[0]; ++i)
+        fputs(lines[i], stdout);
+}
+
 void msg_line_prompt(size_t line_1b)
 {
     /* Same prefix as msg_line_out with current line marker; DOS uses "%1:%2" (edlin.skl). */

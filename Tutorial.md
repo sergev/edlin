@@ -390,6 +390,7 @@ y
 | **`A`** | Append rest of original disk file (**needs one number**, e.g. **`1A`**) |
 | **`E`** | End: save and exit |
 | **`Q`** | Quit without saving (confirms) |
+| **`H`** | Print brief command help |
 | **`;`** | No-op; also separates commands on one line |
 
 ---
