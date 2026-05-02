@@ -26,8 +26,8 @@ EDLIN_BIN = REPO_ROOT / "edlin"
 RE_NEWFILE_PROMPT = re.compile(r"New file\r?\n\*")
 # Blank-line edit: DOS-style "%1:%2" header + displayed text + newline (same as DISPLAY).
 RE_LINE_HEADER = re.compile(r"\s*\d{1,6}:[\* ][^\r\n]*\r?\n")
-# Append past last line (`#`): msg_line_prompt — no newline before stdin (same as insert).
-RE_APPEND_BLANK_PROMPT = re.compile(r"\s*\d{1,6}:\*")
+# Insert / line-replace: msg_line_prompt — no newline after the '     n:*' prefix before stdin.
+RE_LINE_PROMPT_TAIL = re.compile(r"\s*\d{1,6}:\*")
 
 
 def setUpModule():
@@ -84,10 +84,10 @@ class EdlinSession:
         assert self.child is not None
         self.child.expect(RE_LINE_HEADER)
 
-    def expect_append_blank_prompt(self):
-        """Wait for msg_line_prompt after `#` / append — no newline until user types."""
+    def expect_line_prompt_tail(self):
+        """Wait for msg_line_prompt (no newline until user types) — same as insert mode."""
         assert self.child is not None
-        self.child.expect(RE_APPEND_BLANK_PROMPT)
+        self.child.expect(RE_LINE_PROMPT_TAIL)
 
     def expect_entry_error_prompt(self):
         assert self.child is not None
@@ -376,7 +376,8 @@ class TestInsertDeleteBlank(unittest.TestCase):
             s.expect_prompt()
             self.assertIn("new", s.child.before)
 
-    def test_blank_line_edit_append_eof(self):
+    def test_blank_line_edit_hash_eof_no_read(self):
+        """Bare `#` (last+1) matches classic NOCOM: move to EOF pseudo-line, no stdin prompt."""
         with tempfile.TemporaryDirectory() as td:
             wd = Path(td)
             p = wd / "f.txt"
@@ -385,11 +386,31 @@ class TestInsertDeleteBlank(unittest.TestCase):
             s.spawn([str(EDLIN_BIN), str(p)], self)
             s.expect_prompt()
             s.send_line("#")
-            s.expect_append_blank_prompt()
-            s.send_line("b")
             s.expect_prompt()
             s.send_line("L")
             s.expect_prompt()
+            out = s.child.before
+            self.assertIn("a", out)
+            # No second line of user text was added by bare `#`
+            self.assertNotRegex(out, r"(?m)^\s*2:")
+
+    def test_hash_insert_appends_at_end(self):
+        """`#I` inserts before line last+1 — the way to append after the last line."""
+        with tempfile.TemporaryDirectory() as td:
+            wd = Path(td)
+            p = wd / "f.txt"
+            p.write_text("a\n", encoding="ascii")
+            s = EdlinSession(wd)
+            s.spawn([str(EDLIN_BIN), str(p)], self)
+            s.expect_prompt()
+            s.send_line("#I")
+            s.expect_line_prompt_tail()
+            s.send_line("b")
+            s.send_line(".")
+            s.expect_prompt()
+            s.send_line("L")
+            s.expect_prompt()
+            self.assertIn("a", s.child.before)
             self.assertIn("b", s.child.before)
 
     def test_delete_current_and_range(self):
@@ -651,7 +672,8 @@ class TestAppendWriteEndQuit(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             wd = Path(td)
             p = wd / "out.txt"
-            r = run_edlin_script(wd, str(p), b"1\nsaved\nE\n")
+            # New file: blank-line `1` is EOF (no read); use insert to add a line, then E.
+            r = run_edlin_script(wd, str(p), b"1I\nsaved\n.\nE\n")
             self.assertEqual(r.returncode, 0)
             text = p.read_bytes()
             self.assertTrue(text.startswith(b"saved\n"))

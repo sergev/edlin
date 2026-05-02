@@ -216,7 +216,8 @@ static void cmd_insert(Editor *ed, const Cmd *cmd)
 }
 
 //
-// Blank-line edit: only a line number — show line, then replace it or append after last line.
+// Blank-line edit: line reference then Enter with no command letter (matches ASM NOCOM).
+// Target past the last line (GETNUM "#" → last+1) positions at EOF only — no read/replace.
 //
 static void cmd_nocom(Editor *ed, const Cmd *cmd)
 {
@@ -256,11 +257,7 @@ static void cmd_nocom(Editor *ed, const Cmd *cmd)
         editor_replace_line(ed, n, out, o);
         ed->current = n;
     } else {
-        char buf[300];
-        msg_line_prompt(n);
-        if (read_line_stdin(buf, sizeof buf) != 0)
-            return;
-        editor_insert_before(ed, n, buf, strlen(buf));
+        // EOF pseudo-line (count+1): set current only; no stdin prompt (see edlcmd1 NOCOM).
         ed->current = n;
     }
 }

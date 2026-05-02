@@ -165,16 +165,21 @@ That inserts **before** old line 2.
 
 **Insert before the “current” line** — plain **`I`** (no number) inserts before whatever line is currently current.
 
-**Append after the last line** — use **`#`** as a line reference. **`#`** means “last line plus one” (the position after the last line). Example for blank-line append:
+**Append after the last line** — use **`#I`**. **`#`** alone means “last line plus one” (the EOF pseudo-line); classic EDLIN does **not** read a new line from you there. **`I`** inserts **before** a line number, so **`#I`** inserts before line last+1 — i.e. after the last existing line.
 
 ```text
-*#
-     3:* 
+*#I
+     2:* 
 another line at the end
+.
 *
 ```
 
+You can end insert mode with **Ctrl+Z** on a line by itself instead of **`.`** (same as elsewhere).
+
 (Exact line numbers depend on how many lines you already have.)
+
+**Bare `#` then Enter** (blank-line edit with only **`#`**) moves the **current line** to that EOF position and returns to **`*`** — it does **not** append text. Use **`#I`** to type new lines at the end.
 
 ---
 

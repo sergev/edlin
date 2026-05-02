@@ -14,7 +14,7 @@ typedef struct Editor {
     char **lines; // owned; logical lines without trailing CR/LF
     size_t count;
     size_t cap;
-    size_t current; // 1 .. count; 1 == first line
+    size_t current; // 1 .. count+1 (count+1 == EOF pseudo-line after last line)
 
     char *path; // original file path
 

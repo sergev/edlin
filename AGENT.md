@@ -60,7 +60,7 @@ The command letter is looked up in **`COMTAB`** after optional **line arguments*
 
 - **`nnn`** — absolute line number (non-zero; zero is invalid).
 - **`.`** — **current line** (`CURRENT`).
-- **`#`** — **number of lines** in buffer (counts LF in range `START`..`ENDTXT`).
+- **`#`** — **last line plus one** (GETNUM `MAXLIN`: counts LF characters and resolves to the EOF insertion index).
 - **`+n`** / **`-n`** — relative to **current line** (clamped to at least line 1 for `-`).
 - Parameters can be **comma-separated**; up to **four** numeric parameters with special handling for the **fourth** (`.`, `#`, `+`, `-` disallowed there — errors go to **`COMERR`**).
 - Optional **`?`** before the command letter enables **query** mode (**`QFLG`**).

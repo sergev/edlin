@@ -159,7 +159,7 @@ Each subsection lists **purpose**, **parameters**, **defaults**, **behavior**, a
 **Behavior:**
 
 - If the target line **exists**, its text is shown and you enter a replacement line from stdin (**`^V`** quoting supported). Length is capped ([`EDLIN_MAX_LINE`](include/edlin.h)).
-- If the target is **line count + 1** (append after last line), an empty prompt is shown and the new line is **inserted**.
+- If the target is **line count + 1** (the **`#`** / “last line plus one” position — EOF pseudo-line), **nothing is read from stdin**; [`cmd_nocom`](src/commands.c) only sets **current line** to that position (matches classic **`NOCOM`** when the pointer is already at end-of-text). To append real lines after the last line, use **`#I`** (insert before line last+1) or another command that accepts that line reference.
 
 **Errors:** **Entry error** if more than one numeric parameter is supplied, or the target line is invalid.
 
